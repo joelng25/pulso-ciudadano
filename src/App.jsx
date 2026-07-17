@@ -13,6 +13,7 @@ import { ShieldCheck, ChevronRight, Loader2 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 const PALETTE = ["#B8862B", "#2E5339", "#7A3B69", "#3C5A78", "#8C4B2F", "#5C6B4B"];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_CANDIDATES = ["Lista A", "Lista B", "Lista C", "Lista D", "Voto en blanco / Indeciso"];
 const COMUNIDADES_AUTONOMAS = [
   "Andalucía",
@@ -163,6 +164,10 @@ export default function App() {
     setError("");
     if (!form.name.trim() || !form.email.trim() || !form.region.trim()) {
       setError("Completa los tres campos para continuar.");
+      return;
+    }
+    if (!EMAIL_REGEX.test(form.email.trim())) {
+      setError("Escribe un correo electrónico válido (ej: nombre@ejemplo.com).");
       return;
     }
     setBusy(true);
