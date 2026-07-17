@@ -9,8 +9,8 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-import { Settings, ShieldCheck, ChevronRight, Loader2 } from "lucide-react";
-import { supabase } from "./supabaseClient";
+import { ShieldCheck, ChevronRight, Loader2 } from "lucide-react";
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 const PALETTE = ["#B8862B", "#2E5339", "#7A3B69", "#3C5A78", "#8C4B2F", "#5C6B4B"];
 const DEFAULT_CANDIDATES = ["Lista A", "Lista B", "Lista C", "Lista D", "Voto en blanco / Indeciso"];
@@ -64,8 +64,6 @@ export default function App() {
   const [myChoice, setMyChoice] = useState(null);
   const [votes, setVotes] = useState([]);
   const [votesLoading, setVotesLoading] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [newCandidate, setNewCandidate] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -159,23 +157,6 @@ export default function App() {
     }
   };
 
-  const handleAddCandidate = async () => {
-    const label = newCandidate.trim();
-    if (!label) return;
-    const { error: err } = await supabase
-      .from("candidates")
-      .insert({ label, sort_order: candidates.length + 1 });
-    if (!err) {
-      setCandidates((prev) => {
-        const withoutBlank = prev.filter((c) => !c.startsWith("Voto en blanco"));
-        return [...withoutBlank, label, "Voto en blanco / Indeciso"];
-      });
-      setNewCandidate("");
-    } else {
-      setError("No se pudo añadir la lista.");
-    }
-  };
-
   const tallies = candidates.map((c) => ({
     name: c,
     count: votes.filter((v) => v.candidate === c).length,
@@ -188,6 +169,26 @@ export default function App() {
     regionMap[r] = (regionMap[r] || 0) + 1;
   });
   const regionEntries = Object.entries(regionMap).sort((a, b) => b[1] - a[1]);
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{ minHeight: "100%", background: "#EEF0E9", color: "#14213D", fontFamily: "'Inter', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <div style={{ maxWidth: "480px", background: "#fff", border: "1px solid #D7D9CD", borderRadius: "6px", padding: "28px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#8C4B2F", marginBottom: "10px" }}>
+            ⚠️ Falta configuración de Supabase
+          </div>
+          <p style={{ fontSize: "14px", lineHeight: 1.6, color: "#3A4258", margin: "0 0 12px" }}>
+            No se encontraron <code>VITE_SUPABASE_URL</code> ni <code>VITE_SUPABASE_ANON_KEY</code>.
+          </p>
+          <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#3A4258", margin: 0 }}>
+            Local: crea un archivo <code>.env</code> a partir de <code>.env.example</code>.<br />
+            Desplegado (Vercel/Netlify): añade esas dos variables en la configuración
+            del proyecto y vuelve a desplegar.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100%", background: "#EEF0E9", color: "#14213D", fontFamily: "'Inter', sans-serif" }}>
@@ -219,34 +220,8 @@ export default function App() {
           >
             Ver resultados
           </button>
-          <button
-            onClick={() => setAdminOpen((o) => !o)}
-            aria-label="Modo administrador"
-            style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.5, padding: "4px" }}
-          >
-            <Settings size={16} color="#14213D" />
-          </button>
         </div>
       </div>
-
-      {adminOpen && (
-        <div style={{ background: "#14213D", color: "#EEF0E9", padding: "12px 24px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-          <span className="pc-mono" style={{ fontSize: "12px", opacity: 0.8 }}>Añadir lista/candidatura:</span>
-          <input
-            value={newCandidate}
-            onChange={(e) => setNewCandidate(e.target.value)}
-            placeholder="Nombre de la lista"
-            style={{ padding: "6px 10px", borderRadius: "4px", border: "none", fontSize: "13px", minWidth: "180px" }}
-          />
-          <button
-            onClick={handleAddCandidate}
-            className="pc-btn"
-            style={{ background: "#B8862B", color: "#14213D", border: "none", padding: "6px 14px", borderRadius: "4px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
-          >
-            Añadir
-          </button>
-        </div>
-      )}
 
       <div style={{ maxWidth: "760px", margin: "0 auto", padding: "0 24px" }}>
         {step === "landing" && (

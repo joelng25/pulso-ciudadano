@@ -1,4 +1,4 @@
-# Pulso Ciudadano
+# 🗳️ Pulso Ciudadano
 
 Web de sondeo de opinión electoral (no oficial): la gente se registra, marca su
 preferencia entre listas/candidaturas y puede ver los resultados agregados en
@@ -7,7 +7,7 @@ tiempo real.
 > ⚠️ Este proyecto es una **encuesta de opinión independiente**, no un proceso
 > electoral oficial ni un sistema de votación certificado.
 
-## Funcionalidades
+## ✨ Funcionalidades
 
 - **Registro de votantes** — nombre, correo y región/ciudad.
 - **Una persona, un voto** — el correo es único a nivel de base de datos, así
@@ -16,9 +16,8 @@ tiempo real.
 - **Votación por listas** — interfaz tipo papeleta.
 - **Resultados en vivo** — gráfico de barras, recuento estilo "marcas de
   conteo manual" y desglose de participación por región.
-- **Modo administrador** — añade nuevas listas/candidaturas sin tocar código.
 
-## Stack técnico
+## 🧱 Stack técnico
 
 | Parte      | Tecnología                         |
 |------------|-------------------------------------|
@@ -29,7 +28,7 @@ tiempo real.
 | Backend/BD | [Supabase](https://supabase.com) (Postgres) |
 | Despliegue | Vercel / Netlify                    |
 
-## Empezar
+## 🚀 Empezar
 
 ### 1. Backend (Supabase)
 
@@ -65,7 +64,13 @@ añade las mismas variables de entorno (`VITE_SUPABASE_URL`,
 └── vite.config.js
 ```
 
-## Seguridad y limitaciones
+## ✏️ Editar las listas/candidaturas
+
+Como ya no hay modo administrador en la interfaz, para añadir o cambiar
+listas entra a Supabase → **Table Editor** → tabla `candidates` y edita las
+filas directamente (o usa el SQL Editor con `insert into candidates (label, sort_order) values (...)`).
+
+## 🔒 Seguridad y limitaciones
 
 - No hay autenticación por correo (magic link) — cualquiera con la URL puede
   votar con cualquier correo, sin verificarlo. Para un sondeo más riguroso,
@@ -73,6 +78,6 @@ añade las mismas variables de entorno (`VITE_SUPABASE_URL`,
 - Las políticas de Row Level Security de Supabase permiten lectura e
   inserción pública, ya que es una encuesta abierta sin login.
 
-## Licencia
+## 📜 Licencia
 
 MIT — úsalo, modifícalo y despliega tu propia versión libremente.
