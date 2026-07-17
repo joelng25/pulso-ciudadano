@@ -189,6 +189,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [myChoice, setMyChoice] = useState(null);
+  const [isEditingVote, setIsEditingVote] = useState(false);
   const [votes, setVotes] = useState([]);
   const [votesLoading, setVotesLoading] = useState(false);
   const [session, setSession] = useState(null);
@@ -256,6 +257,7 @@ export default function App() {
     await supabase.auth.signOut();
     setSession(null);
     setForm({ name: "", email: "", region: "" });
+    setIsEditingVote(false);
     setStep("landing");
   };
 
@@ -305,33 +307,34 @@ export default function App() {
     setError("");
     try {
       const email = normalizeEmail(form.email);
-      const { error: err } = await supabase.from("votes").insert({
-        name: form.name.trim(),
-        email,
-        region: form.region.trim(),
-        candidate: selected,
-      });
-      if (err) {
-        // 23505 = violación de restricción única (ese correo ya votó)
-        if (err.code === "23505") {
-          const { data } = await supabase
-            .from("votes")
-            .select("candidate")
-            .eq("email", email)
-            .maybeSingle();
-          setMyChoice(data ? data.candidate : selected);
-          setStep("done");
-          return;
-        }
-        throw err;
-      }
+      // upsert: si el correo ya tiene un voto (columna única), lo actualiza
+      // en vez de fallar; así el mismo flujo sirve para votar y para
+      // cambiar el voto.
+      const { error: err } = await supabase.from("votes").upsert(
+        {
+          name: form.name.trim(),
+          email,
+          region: form.region.trim(),
+          candidate: selected,
+        },
+        { onConflict: "email" }
+      );
+      if (err) throw err;
       setMyChoice(selected);
+      setIsEditingVote(false);
       setStep("done");
     } catch (e) {
       setError("No pudimos registrar tu voto. Intenta de nuevo.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleStartEditVote = () => {
+    setSelected(myChoice);
+    setError("");
+    setIsEditingVote(true);
+    setStep("vote");
   };
 
   const tallies = candidates.map((c) => ({
@@ -578,8 +581,14 @@ export default function App() {
 
         {step === "vote" && (
           <div style={{ padding: "56px 0" }}>
-            <h2 className="pc-display" style={{ fontSize: "30px", fontWeight: 600, margin: "0 0 8px" }}>Marca tu papeleta</h2>
-            <p style={{ color: "#3A4258", fontSize: "14px", margin: "0 0 28px" }}>Elige una opción. Solo puedes votar una vez.</p>
+            <h2 className="pc-display" style={{ fontSize: "30px", fontWeight: 600, margin: "0 0 8px" }}>
+              {isEditingVote ? "Cambia tu papeleta" : "Marca tu papeleta"}
+            </h2>
+            <p style={{ color: "#3A4258", fontSize: "14px", margin: "0 0 28px" }}>
+              {isEditingVote
+                ? "Elige tu nueva opción. Sustituirá el voto que ya tenías registrado."
+                : "Elige una opción. Solo puedes votar una vez."}
+            </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "460px" }}>
               {candidates.map((c) => (
@@ -616,9 +625,20 @@ export default function App() {
                 className="pc-btn"
                 style={{ background: "#14213D", color: "#EEF0E9", border: "none", padding: "12px 22px", borderRadius: "3px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}
               >
-                {busy ? "Enviando…" : "Emitir mi opinión"}
+                {busy ? "Enviando…" : isEditingVote ? "Actualizar mi voto" : "Emitir mi opinión"}
               </button>
-              <button onClick={() => setStep("register")} style={{ background: "none", border: "none", color: "#3A4258", fontSize: "14px", cursor: "pointer" }}>
+              <button
+                onClick={() => {
+                  if (isEditingVote) {
+                    setIsEditingVote(false);
+                    setSelected(null);
+                    setStep("done");
+                  } else {
+                    setStep("register");
+                  }
+                }}
+                style={{ background: "none", border: "none", color: "#3A4258", fontSize: "14px", cursor: "pointer" }}
+              >
                 Volver
               </button>
             </div>
@@ -630,9 +650,16 @@ export default function App() {
             {step === "done" && myChoice && (
               <div style={{ marginBottom: "36px", padding: "18px 20px", background: "#F2F6EE", border: "1px solid #C7D6BC", borderRadius: "4px" }}>
                 <span className="pc-mono" style={{ fontSize: "12px", color: "#2E5339" }}>REGISTRADO</span>
-                <p style={{ margin: "6px 0 0", fontSize: "15px" }}>
+                <p style={{ margin: "6px 0 12px", fontSize: "15px" }}>
                   Tu opinión quedó marcada como <strong>{myChoice}</strong>. Gracias por participar.
                 </p>
+                <button
+                  onClick={handleStartEditVote}
+                  className="pc-mono"
+                  style={{ fontSize: "12px", background: "none", border: "1px solid #C7D6BC", padding: "7px 14px", borderRadius: "3px", color: "#2E5339", cursor: "pointer" }}
+                >
+                  Cambiar mi voto
+                </button>
               </div>
             )}
 

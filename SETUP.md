@@ -68,6 +68,16 @@ create policy "public read votes" on votes for select to public using (true);
 create policy "public insert votes" on votes for insert to public with check (true);
 ```
 
+### Si ya tenías el proyecto de Supabase creado antes de la opción "cambiar mi voto"
+
+Cambiar el voto usa `upsert`, que necesita permiso de `UPDATE` además de `INSERT`.
+Ejecuta esto una vez en el **SQL Editor** de Supabase:
+
+```sql
+create policy "public update votes" on votes
+  for update to public using (true) with check (true);
+```
+
 ## 5. Editar las listas/candidaturas
 
 No hay modo administrador en la interfaz. Para añadir o cambiar listas, entra

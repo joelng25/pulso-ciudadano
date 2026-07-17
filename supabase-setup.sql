@@ -43,3 +43,10 @@ create policy "public read votes" on votes
 -- así que la propia base de datos impide el doble voto)
 create policy "public insert votes" on votes
   for insert to public with check (true);
+
+-- Permite actualizar un voto ya existente (para la opción "cambiar mi voto").
+-- Igual que con el insert, no hay verificación criptográfica del correo:
+-- cualquiera que conozca un email podría en teoría modificar ese voto.
+-- Es el mismo modelo de confianza que ya usa el resto de la app.
+create policy "public update votes" on votes
+  for update to public using (true) with check (true);
