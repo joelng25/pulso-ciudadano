@@ -12,6 +12,8 @@ import {
 import { ShieldCheck, ChevronRight, Loader2 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
+import { SPAIN_REGIONS, CANARIAS_REGION, SPAIN_MAP_SIZE, CANARIAS_MAP_SIZE } from "./spainMapData";
+
 const PALETTE = ["#B8862B", "#2E5339", "#7A3B69", "#3C5A78", "#8C4B2F", "#5C6B4B"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_CANDIDATES = ["Lista A", "Lista B", "Lista C", "Lista D", "Voto en blanco / Indeciso"];
@@ -37,41 +39,8 @@ const COMUNIDADES_AUTONOMAS = [
   "Melilla",
 ];
 
-// Disposición tipo "tile grid" de las comunidades y ciudades autónomas.
-// col/row son coordenadas relativas (no geográficas exactas) pensadas para
-// que el conjunto se reconozca como un mapa esquemático de España.
-const REGION_LAYOUT = [
-  { name: "Galicia", abbr: "GA", col: 0, row: 0 },
-  { name: "Asturias", abbr: "AS", col: 1, row: 0 },
-  { name: "Cantabria", abbr: "CB", col: 2, row: 0 },
-  { name: "País Vasco", abbr: "PV", col: 3, row: 0 },
-  { name: "Navarra", abbr: "NA", col: 4, row: 1 },
-  { name: "La Rioja", abbr: "RI", col: 3, row: 1 },
-  { name: "Castilla y León", abbr: "CyL", col: 1, row: 1 },
-  { name: "Aragón", abbr: "AR", col: 4, row: 2 },
-  { name: "Cataluña", abbr: "CT", col: 5, row: 2 },
-  { name: "Comunidad de Madrid", abbr: "MD", col: 2, row: 2 },
-  { name: "Castilla-La Mancha", abbr: "CM", col: 2, row: 3 },
-  { name: "Comunidad Valenciana", abbr: "VC", col: 4, row: 3 },
-  { name: "Extremadura", abbr: "EX", col: 1, row: 3 },
-  { name: "Islas Baleares", abbr: "IB", col: 5, row: 3 },
-  { name: "Andalucía", abbr: "AN", col: 2, row: 4 },
-  { name: "Región de Murcia", abbr: "MC", col: 3, row: 4 },
-  { name: "Ceuta", abbr: "CE", col: 1, row: 5 },
-  { name: "Melilla", abbr: "ML", col: 2, row: 5 },
-  { name: "Canarias", abbr: "CN", col: 0, row: 6 },
-];
-
 function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) {
   const [hovered, setHovered] = useState(null);
-  const cell = 60;
-  const gap = 9;
-  const step = cell + gap;
-  const pad = 18;
-  const maxCol = Math.max(...REGION_LAYOUT.map((r) => r.col));
-  const maxRow = Math.max(...REGION_LAYOUT.map((r) => r.row));
-  const width = pad * 2 + (maxCol + 1) * step - gap;
-  const height = pad * 2 + (maxRow + 1) * step - gap;
 
   function colorFor(name) {
     const winner = regionWinners[name];
@@ -80,45 +49,60 @@ function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) 
     return candidateColors[winner] || PALETTE[idx >= 0 ? idx % PALETTE.length : 0];
   }
 
+  const canariasBoxPad = 10;
+  const canariasBoxX = 8;
+  const canariasBoxY = SPAIN_MAP_SIZE.height + 26;
+  const totalWidth = SPAIN_MAP_SIZE.width;
+  const totalHeight = SPAIN_MAP_SIZE.height + 26 + CANARIAS_MAP_SIZE.height + canariasBoxPad * 2 + 8;
+
+  function regionShape(r, isCanarias) {
+    const isHovered = hovered === r.name;
+    return (
+      <g
+        key={r.name}
+        onMouseEnter={() => setHovered(r.name)}
+        onMouseLeave={() => setHovered(null)}
+        style={{ cursor: "pointer" }}
+      >
+        <path
+          d={r.path}
+          fill={colorFor(r.name)}
+          stroke={isHovered ? "#14213D" : "#EEF0E9"}
+          strokeWidth={isHovered ? 1.6 : 0.8}
+          strokeLinejoin="round"
+        />
+      </g>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "28px", alignItems: "flex-start" }}>
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", maxWidth: "420px", flexShrink: 0 }}>
-        {REGION_LAYOUT.map((r) => {
-          const x = pad + r.col * step;
-          const y = pad + r.row * step;
-          const isHovered = hovered === r.name;
-          return (
-            <g
-              key={r.name}
-              onMouseEnter={() => setHovered(r.name)}
-              onMouseLeave={() => setHovered(null)}
-              style={{ cursor: "pointer" }}
-            >
-              <rect
-                x={x}
-                y={y}
-                width={cell}
-                height={cell}
-                rx="9"
-                fill={colorFor(r.name)}
-                stroke={isHovered ? "#14213D" : "#EEF0E9"}
-                strokeWidth={isHovered ? 2.5 : 2}
-              />
-              <text
-                x={x + cell / 2}
-                y={y + cell / 2 + 4}
-                textAnchor="middle"
-                fontSize="11"
-                fontWeight="600"
-                fontFamily="'IBM Plex Mono', monospace"
-                fill="#14213D"
-                style={{ pointerEvents: "none" }}
-              >
-                {r.abbr}
-              </text>
-            </g>
-          );
-        })}
+      <svg viewBox={`0 0 ${totalWidth} ${totalHeight}`} style={{ width: "100%", maxWidth: "560px", flexShrink: 0 }}>
+        {SPAIN_REGIONS.map((r) => regionShape(r, false))}
+
+        {/* Recuadro aparte para Canarias, como en los mapas convencionales de España */}
+        <rect
+          x={canariasBoxX}
+          y={canariasBoxY}
+          width={CANARIAS_MAP_SIZE.width + canariasBoxPad * 2}
+          height={CANARIAS_MAP_SIZE.height + canariasBoxPad * 2}
+          fill="none"
+          stroke="#C7CABB"
+          strokeDasharray="3 3"
+          rx="4"
+        />
+        <text
+          x={canariasBoxX + 6}
+          y={canariasBoxY - 6}
+          fontSize="10"
+          fontFamily="'IBM Plex Mono', monospace"
+          fill="#8B8E7E"
+        >
+          CANARIAS
+        </text>
+        <g transform={`translate(${canariasBoxX + canariasBoxPad}, ${canariasBoxY + canariasBoxPad})`}>
+          {regionShape(CANARIAS_REGION, true)}
+        </g>
       </svg>
 
       <div style={{ minWidth: "180px", flex: "1 1 180px" }}>
