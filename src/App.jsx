@@ -14,6 +14,27 @@ import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 const PALETTE = ["#B8862B", "#2E5339", "#7A3B69", "#3C5A78", "#8C4B2F", "#5C6B4B"];
 const DEFAULT_CANDIDATES = ["Lista A", "Lista B", "Lista C", "Lista D", "Voto en blanco / Indeciso"];
+const COMUNIDADES_AUTONOMAS = [
+  "Andalucía",
+  "Aragón",
+  "Asturias",
+  "Islas Baleares",
+  "Canarias",
+  "Cantabria",
+  "Castilla-La Mancha",
+  "Castilla y León",
+  "Cataluña",
+  "Extremadura",
+  "Galicia",
+  "La Rioja",
+  "Comunidad de Madrid",
+  "Región de Murcia",
+  "Navarra",
+  "País Vasco",
+  "Comunidad Valenciana",
+  "Ceuta",
+  "Melilla",
+];
 
 function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -368,15 +389,30 @@ export default function App() {
                 />
               </label>
               <label style={{ fontSize: "13px", fontWeight: 600, display: "flex", flexDirection: "column", gap: "6px" }}>
-                Región / ciudad
-                <input
+                Comunidad autónoma
+                <select
                   value={form.region}
                   onChange={(e) => setForm({ ...form, region: e.target.value })}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleRegisterSubmit(e); }}
-                  style={{ padding: "11px 12px", border: "1px solid #C7CABB", borderRadius: "3px", fontSize: "14px", fontFamily: "'Inter', sans-serif" }}
-                  placeholder="Ej: Badalona"
-                  autoFocus={!!session?.user}
-                />
+                  style={{
+                    padding: "11px 12px",
+                    border: "1px solid #C7CABB",
+                    borderRadius: "3px",
+                    fontSize: "14px",
+                    fontFamily: "'Inter', sans-serif",
+                    background: "#fff",
+                    color: form.region ? "#14213D" : "#8B8E7E",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled>
+                    Selecciona tu comunidad autónoma
+                  </option>
+                  {COMUNIDADES_AUTONOMAS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               {error && <div style={{ color: "#8C4B2F", fontSize: "13px" }}>{error}</div>}
