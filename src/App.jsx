@@ -324,7 +324,15 @@ export default function App() {
       setIsEditingVote(false);
       setStep("done");
     } catch (e) {
-      setError("No pudimos registrar tu voto. Intenta de nuevo.");
+      // eslint-disable-next-line no-console
+      console.error("Error al guardar el voto:", e);
+      if (e && (e.code === "42501" || /row-level security|permission denied/i.test(e.message || ""))) {
+        setError(
+          "Tu proyecto de Supabase no tiene permiso para actualizar votos todavía. Añade la política \"public update votes\" (ver SETUP.md) y vuelve a intentarlo."
+        );
+      } else {
+        setError(`No pudimos registrar tu voto. Intenta de nuevo.${e?.message ? ` (${e.message})` : ""}`);
+      }
     } finally {
       setBusy(false);
     }
