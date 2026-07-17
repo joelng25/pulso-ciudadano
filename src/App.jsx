@@ -78,6 +78,7 @@ function TallyGroup({ count }) {
 export default function App() {
   const [step, setStep] = useState("landing");
   const [candidates, setCandidates] = useState(DEFAULT_CANDIDATES);
+  const [candidateColors, setCandidateColors] = useState({});
   const [form, setForm] = useState({ name: "", email: "", region: "" });
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -92,10 +93,15 @@ export default function App() {
     (async () => {
       const { data, error: err } = await supabase
         .from("candidates")
-        .select("label")
+        .select("label, color")
         .order("sort_order", { ascending: true });
       if (!err && data && data.length > 0) {
         setCandidates(data.map((d) => d.label));
+        const colorMap = {};
+        data.forEach((d) => {
+          if (d.color) colorMap[d.label] = d.color;
+        });
+        setCandidateColors(colorMap);
       }
     })();
   }, []);
@@ -516,7 +522,7 @@ export default function App() {
             </div>
 
             {totalVotes > 0 && (
-              <div style={{ height: "260px", marginBottom: "40px" }}>
+              <div style={{ height: `${Math.max(180, tallies.length * 46)}px`, marginBottom: "40px" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={tallies} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#D7D9CD" horizontal={false} />
@@ -524,8 +530,8 @@ export default function App() {
                     <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12, fill: "#14213D" }} />
                     <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "4px", border: "1px solid #D7D9CD" }} />
                     <Bar dataKey="count" radius={[0, 3, 3, 0]}>
-                      {tallies.map((_, i) => (
-                        <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                      {tallies.map((t, i) => (
+                        <Cell key={i} fill={candidateColors[t.name] || PALETTE[i % PALETTE.length]} />
                       ))}
                     </Bar>
                   </BarChart>
