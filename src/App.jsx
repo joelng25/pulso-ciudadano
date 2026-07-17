@@ -37,6 +37,126 @@ const COMUNIDADES_AUTONOMAS = [
   "Melilla",
 ];
 
+// Disposición tipo "tile grid" de las comunidades y ciudades autónomas.
+// col/row son coordenadas relativas (no geográficas exactas) pensadas para
+// que el conjunto se reconozca como un mapa esquemático de España.
+const REGION_LAYOUT = [
+  { name: "Galicia", abbr: "GA", col: 0, row: 0 },
+  { name: "Asturias", abbr: "AS", col: 1, row: 0 },
+  { name: "Cantabria", abbr: "CB", col: 2, row: 0 },
+  { name: "País Vasco", abbr: "PV", col: 3, row: 0 },
+  { name: "Navarra", abbr: "NA", col: 4, row: 1 },
+  { name: "La Rioja", abbr: "RI", col: 3, row: 1 },
+  { name: "Castilla y León", abbr: "CyL", col: 1, row: 1 },
+  { name: "Aragón", abbr: "AR", col: 4, row: 2 },
+  { name: "Cataluña", abbr: "CT", col: 5, row: 2 },
+  { name: "Comunidad de Madrid", abbr: "MD", col: 2, row: 2 },
+  { name: "Castilla-La Mancha", abbr: "CM", col: 2, row: 3 },
+  { name: "Comunidad Valenciana", abbr: "VC", col: 4, row: 3 },
+  { name: "Extremadura", abbr: "EX", col: 1, row: 3 },
+  { name: "Islas Baleares", abbr: "IB", col: 5, row: 3 },
+  { name: "Andalucía", abbr: "AN", col: 2, row: 4 },
+  { name: "Región de Murcia", abbr: "MC", col: 3, row: 4 },
+  { name: "Ceuta", abbr: "CE", col: 1, row: 5 },
+  { name: "Melilla", abbr: "ML", col: 2, row: 5 },
+  { name: "Canarias", abbr: "CN", col: 0, row: 6 },
+];
+
+function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) {
+  const [hovered, setHovered] = useState(null);
+  const cell = 60;
+  const gap = 9;
+  const step = cell + gap;
+  const pad = 18;
+  const maxCol = Math.max(...REGION_LAYOUT.map((r) => r.col));
+  const maxRow = Math.max(...REGION_LAYOUT.map((r) => r.row));
+  const width = pad * 2 + (maxCol + 1) * step - gap;
+  const height = pad * 2 + (maxRow + 1) * step - gap;
+
+  function colorFor(name) {
+    const winner = regionWinners[name];
+    if (!winner) return "#DEDCCB";
+    const idx = candidates.indexOf(winner);
+    return candidateColors[winner] || PALETTE[idx >= 0 ? idx % PALETTE.length : 0];
+  }
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "28px", alignItems: "flex-start" }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", maxWidth: "420px", flexShrink: 0 }}>
+        {REGION_LAYOUT.map((r) => {
+          const x = pad + r.col * step;
+          const y = pad + r.row * step;
+          const isHovered = hovered === r.name;
+          return (
+            <g
+              key={r.name}
+              onMouseEnter={() => setHovered(r.name)}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: "pointer" }}
+            >
+              <rect
+                x={x}
+                y={y}
+                width={cell}
+                height={cell}
+                rx="9"
+                fill={colorFor(r.name)}
+                stroke={isHovered ? "#14213D" : "#EEF0E9"}
+                strokeWidth={isHovered ? 2.5 : 2}
+              />
+              <text
+                x={x + cell / 2}
+                y={y + cell / 2 + 4}
+                textAnchor="middle"
+                fontSize="11"
+                fontWeight="600"
+                fontFamily="'IBM Plex Mono', monospace"
+                fill="#14213D"
+                style={{ pointerEvents: "none" }}
+              >
+                {r.abbr}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      <div style={{ minWidth: "180px", flex: "1 1 180px" }}>
+        <h4 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 12px" }}>
+          Leyenda
+        </h4>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {candidates.map((c, i) => (
+            <div key={c} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ width: "14px", height: "14px", borderRadius: "3px", flexShrink: 0, background: candidateColors[c] || PALETTE[i % PALETTE.length] }} />
+              <span style={{ fontSize: "13px" }}>{c}</span>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px" }}>
+            <span style={{ width: "14px", height: "14px", borderRadius: "3px", flexShrink: 0, background: "#DEDCCB", border: "1px solid #C7CABB" }} />
+            <span style={{ fontSize: "13px", color: "#8B8E7E" }}>Sin votos todavía</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: "18px", padding: "12px 14px", background: "#fff", border: "1px solid #D7D9CD", borderRadius: "4px", minHeight: "62px" }}>
+          {hovered ? (
+            <>
+              <div style={{ fontWeight: 700, fontSize: "13px" }}>{hovered}</div>
+              <div style={{ fontSize: "12px", color: "#3A4258", marginTop: "4px" }}>
+                {regionWinners[hovered]
+                  ? `Va en cabeza: ${regionWinners[hovered]} (${regionCounts[hovered]?.[regionWinners[hovered]] || 0} voto${(regionCounts[hovered]?.[regionWinners[hovered]] || 0) === 1 ? "" : "s"})`
+                  : "Todavía sin votos registrados."}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: "12px", color: "#8B8E7E" }}>Pasa el cursor sobre una comunidad para ver el detalle.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function normalizeEmail(email) {
   return email.trim().toLowerCase();
 }
@@ -242,6 +362,27 @@ export default function App() {
     regionMap[r] = (regionMap[r] || 0) + 1;
   });
   const regionEntries = Object.entries(regionMap).sort((a, b) => b[1] - a[1]);
+
+  // Conteo de votos por candidato dentro de cada comunidad, y el candidato
+  // con más votos en cada una (para colorear el mapa).
+  const regionCandidateCounts = {};
+  votes.forEach((v) => {
+    if (!v.region) return;
+    if (!regionCandidateCounts[v.region]) regionCandidateCounts[v.region] = {};
+    regionCandidateCounts[v.region][v.candidate] = (regionCandidateCounts[v.region][v.candidate] || 0) + 1;
+  });
+  const regionWinners = {};
+  Object.entries(regionCandidateCounts).forEach(([region, counts]) => {
+    let winner = null;
+    let max = 0;
+    Object.entries(counts).forEach(([candidate, count]) => {
+      if (count > max) {
+        max = count;
+        winner = candidate;
+      }
+    });
+    regionWinners[region] = winner;
+  });
 
   if (!isSupabaseConfigured) {
     return (
@@ -541,6 +682,20 @@ export default function App() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+            )}
+
+            {totalVotes > 0 && (
+              <div style={{ marginBottom: "40px" }}>
+                <h3 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 16px" }}>
+                  Mapa por comunidad autónoma
+                </h3>
+                <SpainMap
+                  regionWinners={regionWinners}
+                  regionCounts={regionCandidateCounts}
+                  candidateColors={candidateColors}
+                  candidates={candidates}
+                />
               </div>
             )}
 
