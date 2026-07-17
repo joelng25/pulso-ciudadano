@@ -26,15 +26,19 @@ create table if not exists votes (
 alter table candidates enable row level security;
 alter table votes enable row level security;
 
--- Cualquier visitante (clave "anon") puede leer las listas
+-- "to anon" solo cubre visitantes sin sesión. Como ahora también hay gente
+-- que entra con Google (rol "authenticated"), usamos "to public" para que
+-- las políticas apliquen a cualquier visitante, con o sin sesión.
+
+-- Cualquiera puede leer las listas
 create policy "public read candidates" on candidates
-  for select to anon using (true);
+  for select to public using (true);
 
--- Cualquier visitante puede leer los resultados agregados
+-- Cualquiera puede leer los resultados agregados
 create policy "public read votes" on votes
-  for select to anon using (true);
+  for select to public using (true);
 
--- Cualquier visitante puede registrar su voto (la columna email es UNIQUE,
+-- Cualquiera puede registrar su voto (la columna email es UNIQUE,
 -- así que la propia base de datos impide el doble voto)
 create policy "public insert votes" on votes
-  for insert to anon with check (true);
+  for insert to public with check (true);
