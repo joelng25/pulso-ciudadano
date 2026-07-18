@@ -1,4 +1,4 @@
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import React, { useState, useEffect, useCallback } from "react";
 import {
   BarChart,
@@ -754,6 +754,7 @@ export default function App() {
           Pulso Ciudadano — sondeo de opinión independiente, sin afiliación oficial.
         </span>
       </div>
+      <Analytics />
     </div>
   );
 }
