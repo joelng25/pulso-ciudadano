@@ -1,4 +1,3 @@
-import { Analytics } from "@vercel/analytics/next"
 import React, { useState, useEffect, useCallback } from "react";
 import {
   BarChart,
