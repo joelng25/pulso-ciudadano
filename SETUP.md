@@ -80,31 +80,57 @@ create policy "public update votes" on votes
 
 ## 5. Recibir un email cada vez que alguien vota
 
-Ejecuta [`supabase-email-notifications.sql`](./supabase-email-notifications.sql) en
-el **SQL Editor** de Supabase (después de sustituir `TU_RESEND_API_KEY` por tu
-clave real, dentro del propio archivo). Con eso, cada voto nuevo o cambiado
-dispara un email a `joelnogao625@gmail.com`.
+> ⚠️ **Nunca pegues tu clave de Resend en un archivo del repositorio.**
+> GitHub escanea los commits en busca de claves y las marca como expuestas
+> en cuanto las subes, aunque las borres después (queda en el historial).
+> Por eso este método guarda la clave en **Supabase Vault**, cifrada, y no
+> en ningún archivo.
 
 Pasos:
 
-1. Crea una cuenta gratuita en [resend.com](https://resend.com) usando
+1. Ejecuta [`supabase-email-notifications.sql`](./supabase-email-notifications.sql)
+   completo en Supabase → **SQL Editor** (este archivo no contiene ninguna
+   clave, es seguro tenerlo en GitHub).
+2. Crea una cuenta gratuita en [resend.com](https://resend.com) usando
    **joelnogao625@gmail.com** como email de la cuenta. Mientras no verifiques
    un dominio propio en Resend, solo puede enviar correos a esa misma
    dirección (limitación del plan gratuito sin dominio verificado) — así que
    tiene que coincidir.
-2. En Resend, ve a **API Keys** → crea una clave → cópiala.
-3. Abre `supabase-email-notifications.sql`, busca la línea
-   `api_key text := 'TU_RESEND_API_KEY';` y sustituye `TU_RESEND_API_KEY`
-   por esa clave (dejándola entre comillas simples).
-4. Pega y ejecuta todo el archivo en el SQL Editor de Supabase.
+3. En Resend, ve a **API Keys** → crea una clave → cópiala.
+4. Vuelve al SQL Editor de Supabase, abre una consulta **nueva y vacía**
+   (no la guardes como archivo del proyecto) y ejecuta, sustituyendo por tu
+   clave real:
+   ```sql
+   select vault.create_secret('re_TU_CLAVE_REAL', 'resend_api_key');
+   ```
 5. Prueba a votar (o cambiar tu voto) y revisa la bandeja de
    joelnogao625@gmail.com (y la carpeta de spam la primera vez).
 
-Si más adelante quieres cambiar la clave, editas esa misma línea y vuelves a
-ejecutar el archivo completo (no duplica nada, solo actualiza la función).
-Si quieres enviar a otras direcciones o verificar un dominio propio en
-Resend para no tener esa restricción, edita `to` y `from` dentro de la
-función `notify_vote_email()` en ese mismo archivo SQL.
+Para cambiar la clave más adelante:
+```sql
+select vault.update_secret(
+  (select id from vault.secrets where name = 'resend_api_key'),
+  're_TU_CLAVE_NUEVA'
+);
+```
+
+Si quieres enviar a otras direcciones, edita el valor `to` dentro de la
+función `notify_vote_email()` en `supabase-email-notifications.sql` (eso sí
+es seguro subirlo, no es un secreto) y vuelve a ejecutar el archivo.
+
+### Si ya subiste una clave de Resend a GitHub por error
+
+1. **Revócala ya** en Resend → API Keys → "..." junto a la clave → *Remove
+   API Key*. Esto es lo urgente: invalida la clave aunque siga visible en
+   el historial de git.
+2. Crea una clave nueva y guárdala solo con `vault.create_secret` (paso 4
+   de arriba), nunca en un archivo.
+3. Opcional pero recomendable: limpia el historial de git para que la
+   clave vieja deje de aparecer en commits antiguos, con
+   [`git filter-repo`](https://github.com/newren/git-filter-repo) o la
+   herramienta de eliminación de datos sensibles de GitHub. No es
+   estrictamente necesario si ya revocaste la clave (una clave revocada no
+   sirve para nada), pero evita que quede ahí para siempre.
 
 ## 6. Editar las listas/candidaturas
 
@@ -145,9 +171,7 @@ genérica por defecto.
   el siguiente paso sería añadir Supabase Auth con verificación por email.
 - Las políticas de Row Level Security de Supabase permiten lectura,
   inserción y actualización pública, ya que es una encuesta abierta sin login.
-- Si activas las notificaciones por email (sección 5), la clave de Resend
-  queda guardada dentro de la función SQL `notify_vote_email()` en tu
-  proyecto de Supabase (no en el código del frontend ni en el repositorio),
-  pero cualquiera con acceso al SQL Editor de tu proyecto de Supabase podría
-  leerla.
+- Si activas las notificaciones por email (sección 5), la clave de Resend se
+  guarda cifrada en Supabase Vault, nunca en un archivo del repositorio ni
+  en el código del frontend.
 
