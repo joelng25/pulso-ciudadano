@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ShieldCheck, ChevronRight, Loader2 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 import { SPAIN_REGIONS, CANARIAS_REGION, SPAIN_MAP_SIZE, CANARIAS_MAP_SIZE } from "./spainMapData";
@@ -753,6 +754,7 @@ export default function App() {
           Pulso Ciudadano — sondeo de opinión independiente, sin afiliación oficial.
         </span>
       </div>
+      <Analytics />
     </div>
   );
 }
