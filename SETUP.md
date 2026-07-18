@@ -78,14 +78,42 @@ create policy "public update votes" on votes
   for update to public using (true) with check (true);
 ```
 
-## 5. Editar las listas/candidaturas
+## 5. Recibir un email cada vez que alguien vota
+
+Ejecuta [`supabase-email-notifications.sql`](./supabase-email-notifications.sql) en
+el **SQL Editor** de Supabase (después de sustituir `TU_RESEND_API_KEY` por tu
+clave real, dentro del propio archivo). Con eso, cada voto nuevo o cambiado
+dispara un email a `joelnogao625@gmail.com`.
+
+Pasos:
+
+1. Crea una cuenta gratuita en [resend.com](https://resend.com) usando
+   **joelnogao625@gmail.com** como email de la cuenta. Mientras no verifiques
+   un dominio propio en Resend, solo puede enviar correos a esa misma
+   dirección (limitación del plan gratuito sin dominio verificado) — así que
+   tiene que coincidir.
+2. En Resend, ve a **API Keys** → crea una clave → cópiala.
+3. Abre `supabase-email-notifications.sql`, busca la línea
+   `api_key text := 'TU_RESEND_API_KEY';` y sustituye `TU_RESEND_API_KEY`
+   por esa clave (dejándola entre comillas simples).
+4. Pega y ejecuta todo el archivo en el SQL Editor de Supabase.
+5. Prueba a votar (o cambiar tu voto) y revisa la bandeja de
+   joelnogao625@gmail.com (y la carpeta de spam la primera vez).
+
+Si más adelante quieres cambiar la clave, editas esa misma línea y vuelves a
+ejecutar el archivo completo (no duplica nada, solo actualiza la función).
+Si quieres enviar a otras direcciones o verificar un dominio propio en
+Resend para no tener esa restricción, edita `to` y `from` dentro de la
+función `notify_vote_email()` en ese mismo archivo SQL.
+
+## 6. Editar las listas/candidaturas
 
 No hay modo administrador en la interfaz. Para añadir o cambiar listas, entra
 a Supabase → **Table Editor** → tabla `candidates` y edita las filas
 directamente (o usa el SQL Editor con
 `insert into candidates (label, sort_order) values (...)`).
 
-## 6. Cambiar los colores del gráfico
+## 7. Cambiar los colores del gráfico
 
 Cada candidatura puede tener su propio color, editable en cualquier momento:
 
@@ -104,7 +132,8 @@ genérica por defecto.
 │   ├── main.jsx          # Punto de entrada de React
 │   ├── supabaseClient.js # Cliente de Supabase
 │   └── index.css         # Tailwind
-├── supabase-setup.sql    # Script para crear las tablas en Supabase
+├── supabase-setup.sql               # Script para crear las tablas en Supabase
+├── supabase-email-notifications.sql # Trigger opcional: email por cada voto
 ├── .env.example           # Plantilla de variables de entorno
 └── vite.config.js
 ```
@@ -114,5 +143,11 @@ genérica por defecto.
 - No hay autenticación por correo (magic link) — cualquiera con la URL puede
   votar con cualquier correo, sin verificarlo. Para un sondeo más riguroso,
   el siguiente paso sería añadir Supabase Auth con verificación por email.
-- Las políticas de Row Level Security de Supabase permiten lectura e
-  inserción pública, ya que es una encuesta abierta sin login.
+- Las políticas de Row Level Security de Supabase permiten lectura,
+  inserción y actualización pública, ya que es una encuesta abierta sin login.
+- Si activas las notificaciones por email (sección 5), la clave de Resend
+  queda guardada dentro de la función SQL `notify_vote_email()` en tu
+  proyecto de Supabase (no en el código del frontend ni en el repositorio),
+  pero cualquiera con acceso al SQL Editor de tu proyecto de Supabase podría
+  leerla.
+
