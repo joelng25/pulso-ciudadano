@@ -52,31 +52,11 @@ Esto requiere dos configuraciones externas (una en Google, una en Supabase):
    `http://localhost:5173` (para probar en local).
 4. Guarda.
 
-### Si ya tenías el proyecto de Supabase creado antes de este cambio
+## Protección obligatoria antes de desplegar
 
-Las políticas de seguridad (RLS) cambiaron de `to anon` a `to public` para
-cubrir también a la gente que entra con Google. Ejecuta esto una vez en el
-**SQL Editor** de Supabase:
+Aplica `security-hardening.sql` en el servicio de Pulso (no en el portafolio), después de una copia de seguridad y antes de desplegar esta versión. No elimina votos. Bloquea lectura/escritura directa de filas y ofrece únicamente recuentos públicos y operaciones sobre el voto propio de cuentas verificadas. Google ya no es opcional para votar.
 
-```sql
-drop policy "public read candidates" on candidates;
-drop policy "public read votes" on votes;
-drop policy "public insert votes" on votes;
-
-create policy "public read candidates" on candidates for select to public using (true);
-create policy "public read votes" on votes for select to public using (true);
-create policy "public insert votes" on votes for insert to public with check (true);
-```
-
-### Si ya tenías el proyecto de Supabase creado antes de la opción "cambiar mi voto"
-
-Cambiar el voto usa `upsert`, que necesita permiso de `UPDATE` además de `INSERT`.
-Ejecuta esto una vez en el **SQL Editor** de Supabase:
-
-```sql
-create policy "public update votes" on votes
-  for update to public using (true) with check (true);
-```
+Las filas antiguas sin `user_id` se conservan; no pueden reclamarse automáticamente por correo. Su vinculación requiere un proceso revisado por el propietario. No recrees las antiguas políticas públicas. Prueba con dos cuentas verificadas distintas que una no puede modificar el voto de la otra y que una solicitud sin sesión no puede votar. La aplicación no demuestra que cada cuenta sea una persona distinta.
 
 ## 5. Recibir un email cada vez que alguien vota
 
@@ -166,12 +146,4 @@ genérica por defecto.
 
 ## Seguridad y limitaciones
 
-- No hay autenticación por correo (magic link) — cualquiera con la URL puede
-  votar con cualquier correo, sin verificarlo. Para un sondeo más riguroso,
-  el siguiente paso sería añadir Supabase Auth con verificación por email.
-- Las políticas de Row Level Security de Supabase permiten lectura,
-  inserción y actualización pública, ya que es una encuesta abierta sin login.
-- Si activas las notificaciones por email (sección 5), la clave de Resend se
-  guarda cifrada en Supabase Vault, nunca en un archivo del repositorio ni
-  en el código del frontend.
-
+Los cambios del repositorio no certifican el servicio desplegado: confirma que `security-hardening.sql` se aplicó y ejecuta pruebas de acceso allí. Los resultados devuelven grupos por región/candidatura, nunca nombres, correos ni filas individuales. Los grupos pequeños aún pueden revelar información por inferencia; no publiques esta encuesta como voto secreto ni como proceso electoral oficial.

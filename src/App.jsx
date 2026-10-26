@@ -141,10 +141,6 @@ function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) 
   );
 }
 
-function normalizeEmail(email) {
-  return email.trim().toLowerCase();
-}
-
 function TallyGroup({ count }) {
   const fullGroups = Math.floor(count / 5);
   const remainder = count % 5;
@@ -214,10 +210,9 @@ export default function App() {
 
   const loadVotes = useCallback(async () => {
     setVotesLoading(true);
-    const { data, error: err } = await supabase
-      .from("votes")
-      .select("name, email, region, candidate, created_at");
+    const { data, error: err } = await supabase.rpc("vote_results");
     if (!err && data) setVotes(data);
+    else setError("No se pudieron cargar los recuentos. Revisa la configuración segura del servicio.");
     setVotesLoading(false);
   }, []);
 
@@ -276,14 +271,11 @@ export default function App() {
       setError("Escribe un correo electrónico válido (ej: nombre@ejemplo.com).");
       return;
     }
+    if (!session?.user) { setError("Inicia sesión con Google para verificar tu cuenta."); return; }
     setBusy(true);
     try {
-      const email = normalizeEmail(form.email);
-      const { data, error: err } = await supabase
-        .from("votes")
-        .select("candidate")
-        .eq("email", email)
-        .maybeSingle();
+      const { data: rows, error: err } = await supabase.rpc("my_vote");
+      const data = rows?.[0];
       if (err) throw err;
       if (data) {
         setMyChoice(data.candidate);
@@ -306,19 +298,13 @@ export default function App() {
     setBusy(true);
     setError("");
     try {
-      const email = normalizeEmail(form.email);
-      // upsert: si el correo ya tiene un voto (columna única), lo actualiza
-      // en vez de fallar; así el mismo flujo sirve para votar y para
-      // cambiar el voto.
-      const { error: err } = await supabase.from("votes").upsert(
-        {
-          name: form.name.trim(),
-          email,
-          region: form.region.trim(),
-          candidate: selected,
-        },
-        { onConflict: "email" }
-      );
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error("Inicia sesión con una cuenta verificada.");
+      const { error: err } = await supabase.rpc("cast_vote", {
+        voter_name: form.name.trim(),
+        voter_region: form.region.trim(),
+        selected_candidate: selected,
+      });
       if (err) throw err;
       setMyChoice(selected);
       setIsEditingVote(false);
@@ -328,7 +314,7 @@ export default function App() {
       console.error("Error al guardar el voto:", e);
       if (e && (e.code === "42501" || /row-level security|permission denied/i.test(e.message || ""))) {
         setError(
-          "Tu proyecto de Supabase no tiene permiso para actualizar votos todavía. Añade la política \"public update votes\" (ver SETUP.md) y vuelve a intentarlo."
+          "La cuenta no tiene permiso para este voto. Revisa la configuración segura; no habilites escrituras públicas."
         );
       } else {
         setError(`No pudimos registrar tu voto. Intenta de nuevo.${e?.message ? ` (${e.message})` : ""}`);
@@ -347,14 +333,14 @@ export default function App() {
 
   const tallies = candidates.map((c) => ({
     name: c,
-    count: votes.filter((v) => v.candidate === c).length,
+    count: votes.filter((v) => v.candidate === c).reduce((sum,v) => sum + Number(v.vote_count),0),
   }));
-  const totalVotes = votes.length;
+  const totalVotes = votes.reduce((sum,v) => sum + Number(v.vote_count),0);
 
   const regionMap = {};
   votes.forEach((v) => {
     const r = v.region || "Sin región";
-    regionMap[r] = (regionMap[r] || 0) + 1;
+    regionMap[r] = (regionMap[r] || 0) + Number(v.vote_count);
   });
   const regionEntries = Object.entries(regionMap).sort((a, b) => b[1] - a[1]);
 
@@ -364,7 +350,7 @@ export default function App() {
   votes.forEach((v) => {
     if (!v.region) return;
     if (!regionCandidateCounts[v.region]) regionCandidateCounts[v.region] = {};
-    regionCandidateCounts[v.region][v.candidate] = (regionCandidateCounts[v.region][v.candidate] || 0) + 1;
+    regionCandidateCounts[v.region][v.candidate] = (regionCandidateCounts[v.region][v.candidate] || 0) + Number(v.vote_count);
   });
   const regionWinners = {};
   Object.entries(regionCandidateCounts).forEach(([region, counts]) => {
@@ -481,11 +467,11 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => setStep("register")}
+                onClick={handleGoogleLogin}
                 className="pc-btn"
                 style={{ background: "#14213D", color: "#EEF0E9", border: "none", padding: "13px 26px", borderRadius: "3px", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
               >
-                Registrarme con mi correo <ChevronRight size={16} />
+                Verificar mi cuenta <ChevronRight size={16} />
               </button>
             </div>
 
@@ -494,8 +480,7 @@ export default function App() {
                 <ShieldCheck size={18} color="#2E5339" style={{ flexShrink: 0, marginTop: "2px" }} />
                 <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#3A4258", margin: 0 }}>
                   Este sitio recoge opiniones con fines de sondeo público y no sustituye ni forma parte de
-                  ningún proceso electoral oficial. Un correo, un voto: si vuelves a registrarte con el mismo
-                  correo verás la elección que ya marcaste.
+                  ningún proceso electoral oficial. Una cuenta verificada, un voto. No garantiza una persona única: puedes tener varias cuentas.
                 </p>
               </div>
             </div>
@@ -509,7 +494,7 @@ export default function App() {
             </h2>
             <p style={{ color: "#3A4258", fontSize: "14px", margin: "0 0 28px" }}>
               {session?.user
-                ? "Confirmamos tu identidad con Google. Solo nos falta tu región."
+                ? "Verificamos tu cuenta con Google, no tu identidad civil. Solo falta tu región."
                 : "Solo lo usamos para evitar votos duplicados y agrupar resultados por región."}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "420px" }}>
@@ -739,7 +724,7 @@ export default function App() {
                 Actualizar resultados
               </button>
               {step === "results" && (
-                <button onClick={() => setStep("register")} style={{ background: "none", border: "none", color: "#3A4258", fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}>
+                <button onClick={handleGoogleLogin} style={{ background: "none", border: "none", color: "#3A4258", fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}>
                   Participar en la encuesta
                 </button>
               )}
