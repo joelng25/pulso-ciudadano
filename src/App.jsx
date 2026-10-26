@@ -48,6 +48,8 @@ const COMUNIDADES_AUTONOMAS = [
 
 function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) {
   const [hovered, setHovered] = useState(null);
+  const [picked, setPicked] = useState(null);
+  const focus = picked || hovered;
 
   function colorFor(name) {
     const winner = regionWinners[name];
@@ -63,12 +65,15 @@ function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) 
   const totalHeight = SPAIN_MAP_SIZE.height + 26 + CANARIAS_MAP_SIZE.height + canariasBoxPad * 2 + 8;
 
   function regionShape(r, isCanarias) {
-    const isHovered = hovered === r.name;
+    const isHovered = hovered === r.name || picked === r.name;
     return (
       <g
         key={r.name}
         onMouseEnter={() => setHovered(r.name)}
         onMouseLeave={() => setHovered(null)}
+        onClick={() => setPicked((p) => (p === r.name ? null : r.name))}
+        role="button"
+        aria-label={`Ver resultados en ${r.name}`}
         style={{ cursor: "pointer" }}
       >
         <path
@@ -130,21 +135,69 @@ function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) 
         </div>
 
         <div style={{ marginTop: "18px", padding: "12px 14px", background: "#fff", border: "1px solid #D7D9CD", borderRadius: "4px", minHeight: "62px" }}>
-          {hovered ? (
-            <>
-              <div style={{ fontWeight: 700, fontSize: "13px" }}>{hovered}</div>
-              <div style={{ fontSize: "12px", color: "#3A4258", marginTop: "4px" }}>
-                {regionWinners[hovered]
-                  ? `Va en cabeza: ${regionWinners[hovered]} (${regionCounts[hovered]?.[regionWinners[hovered]] || 0} voto${(regionCounts[hovered]?.[regionWinners[hovered]] || 0) === 1 ? "" : "s"})`
-                  : "Todavía sin votos registrados."}
-              </div>
-            </>
+          {focus ? (
+            <RegionBreakdown
+              region={focus}
+              counts={regionCounts[focus] || {}}
+              candidateColors={candidateColors}
+              candidates={candidates}
+              pinned={picked === focus}
+              onClose={() => setPicked(null)}
+            />
           ) : (
-            <div style={{ fontSize: "12px", color: "#8B8E7E" }}>Pasa el cursor sobre una comunidad para ver el detalle.</div>
+            <div style={{ fontSize: "12px", color: "#8B8E7E" }}>Pulsa una comunidad del mapa para ver todos sus resultados.</div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export function regionResults(counts) {
+  const total = Object.values(counts).reduce((a, b) => a + Number(b), 0);
+  const rows = Object.entries(counts)
+    .map(([name, n]) => ({ name, count: Number(n), pct: total ? (Number(n) * 100) / total : 0 }))
+    .sort((a, b) => b.count - a.count);
+  return { total, rows };
+}
+
+function RegionBreakdown({ region, counts, candidateColors, candidates, pinned, onClose }) {
+  const { total, rows } = regionResults(counts);
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "8px" }}>
+        <div style={{ fontWeight: 700, fontSize: "13px" }}>{region}</div>
+        {pinned && (
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "12px", color: "#3A4258", cursor: "pointer", textDecoration: "underline" }}>
+            Cerrar
+          </button>
+        )}
+      </div>
+      <div className="pc-mono" style={{ fontSize: "11px", color: "#8B8E7E", margin: "2px 0 10px" }}>
+        {total} voto{total === 1 ? "" : "s"}
+      </div>
+      {total === 0 ? (
+        <div style={{ fontSize: "12px", color: "#3A4258" }}>Todavía sin votos registrados.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+          {rows.map((r) => {
+            const idx = candidates.indexOf(r.name);
+            const color = candidateColors[r.name] || PALETTE[idx >= 0 ? idx % PALETTE.length : 0];
+            return (
+              <div key={r.name}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span>{r.name}</span>
+                  <span className="pc-mono" style={{ color: "#8C4B2F" }}>{r.pct.toFixed(1)}% · {r.count}</span>
+                </div>
+                <div style={{ height: "5px", background: "#EEF0E9", borderRadius: "3px", marginTop: "3px" }}>
+                  <div style={{ width: `${r.pct}%`, height: "100%", background: color, borderRadius: "3px", border: color.toLowerCase().startsWith("#fff") ? "1px solid #C7CABB" : "none" }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -720,7 +773,7 @@ export default function App() {
             {totalVotes > 0 && (
               <div style={{ marginBottom: "40px" }}>
                 <h3 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 16px" }}>
-                  Mapa por comunidad autónoma
+                  Mapa por comunidad autónoma · pulsa para ver el detalle
                 </h3>
                 <SpainMap
                   regionWinners={regionWinners}
