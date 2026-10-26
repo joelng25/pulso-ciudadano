@@ -16,7 +16,14 @@ import { SPAIN_REGIONS, CANARIAS_REGION, SPAIN_MAP_SIZE, CANARIAS_MAP_SIZE } fro
 
 const PALETTE = ["#B8862B", "#2E5339", "#7A3B69", "#3C5A78", "#8C4B2F", "#5C6B4B"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DEFAULT_CANDIDATES = ["Lista A", "Lista B", "Lista C", "Lista D", "Voto en blanco / Indeciso"];
+const DEFAULT_CANDIDATES = ["PP", "PSOE", "Vox", "Sumar", "Podemos", "Se Acabó La Fiesta", "Voto en blanco / Indeciso"];
+// A candidatura without regions stands nationwide; otherwise only in its comunidades.
+export function isCandidateAvailable(label, region, regionsByLabel) {
+  const allowed = regionsByLabel[label];
+  if (!allowed) return true;
+  return Boolean(region) && allowed.includes(region);
+}
+
 const COMUNIDADES_AUTONOMAS = [
   "Andalucía",
   "Aragón",
@@ -180,6 +187,7 @@ export default function App() {
   const [step, setStep] = useState("landing");
   const [candidates, setCandidates] = useState(DEFAULT_CANDIDATES);
   const [candidateColors, setCandidateColors] = useState({});
+  const [candidateRegions, setCandidateRegions] = useState({});
   const [form, setForm] = useState({ name: "", email: "", region: "" });
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -193,10 +201,17 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const { data, error: err } = await supabase
+      let { data, error: err } = await supabase
         .from("candidates")
-        .select("label, color")
+        .select("label, color, regions")
         .order("sort_order", { ascending: true });
+      if (err) {
+        // Database without the regional column yet: everything is nationwide.
+        ({ data, error: err } = await supabase
+          .from("candidates")
+          .select("label, color")
+          .order("sort_order", { ascending: true }));
+      }
       if (!err && data && data.length > 0) {
         setCandidates(data.map((d) => d.label));
         const colorMap = {};
@@ -204,6 +219,11 @@ export default function App() {
           if (d.color) colorMap[d.label] = d.color;
         });
         setCandidateColors(colorMap);
+        const regionMap = {};
+        data.forEach((d) => {
+          if (Array.isArray(d.regions) && d.regions.length > 0) regionMap[d.label] = d.regions;
+        });
+        setCandidateRegions(regionMap);
       }
     })();
   }, []);
@@ -291,7 +311,8 @@ export default function App() {
   };
 
   const handleVoteSubmit = async () => {
-    if (!selected) {
+    if (!selected || !isCandidateAvailable(selected, form.region, candidateRegions)) {
+      setSelected(null);
       setError("Elige una opción antes de continuar.");
       return;
     }
@@ -330,6 +351,8 @@ export default function App() {
     setIsEditingVote(true);
     setStep("vote");
   };
+
+  const ballotCandidates = candidates.filter((c) => isCandidateAvailable(c, form.region, candidateRegions));
 
   const tallies = candidates.map((c) => ({
     name: c,
@@ -584,7 +607,12 @@ export default function App() {
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "460px" }}>
-              {candidates.map((c) => (
+              {form.region && (
+                <p style={{ color: "#3A4258", fontSize: "13px", margin: "0 0 4px" }}>
+                  Candidaturas que se presentan en {form.region}.
+                </p>
+              )}
+              {ballotCandidates.map((c) => (
                 <button
                   key={c}
                   onClick={() => setSelected(c)}
