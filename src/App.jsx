@@ -746,16 +746,17 @@ export default function App() {
               const ranked = [...tallies].sort((a, b) => b.count - a.count);
               const colorOf = (name) => candidateColors[name] || PALETTE[Math.max(0, candidates.indexOf(name)) % PALETTE.length];
               const pct = (n) => (totalVotes ? (n * 100) / totalVotes : 0);
+              const maxCount = ranked[0]?.count || 1;
               const top = ranked.filter((t) => t.count > 0).slice(0, 3);
               return (
                 <>
                   {top.length > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "12px", marginBottom: "24px" }}>
                       {top.map((t, i) => (
-                        <div key={t.name} style={{ background: "#fff", border: "1px solid #D7D9CD", borderTop: `4px solid ${colorOf(t.name)}`, borderRadius: "6px", padding: "14px 16px" }}>
+                        <div key={t.name} style={{ background: "#fff", border: "1px solid #D7D9CD", borderTop: `4px solid ${colorOf(t.name)}`, borderRadius: "6px", padding: "14px clamp(10px, 3vw, 16px)", minWidth: 0 }}>
                           <div className="pc-mono" style={{ fontSize: "11px", color: "#8B8E7E", textTransform: "uppercase", letterSpacing: "0.06em" }}>{i + 1}.º puesto</div>
                           <div style={{ fontWeight: 700, fontSize: "15px", margin: "4px 0 2px" }}>{t.name}</div>
-                          <div className="pc-display" style={{ fontSize: "30px", fontWeight: 600, lineHeight: 1.1 }}>{pct(t.count).toFixed(1)}%</div>
+                          <div className="pc-display" style={{ fontSize: "clamp(22px, 6vw, 30px)", fontWeight: 600, lineHeight: 1.1 }}>{pct(t.count).toFixed(1)}%</div>
                           <div className="pc-mono" style={{ fontSize: "11px", color: "#3A4258" }}>{t.count} votos</div>
                         </div>
                       ))}
@@ -772,15 +773,15 @@ export default function App() {
 
                   <div style={{ background: "#fff", border: "1px solid #D7D9CD", borderRadius: "6px", padding: "8px 18px", marginBottom: "40px" }}>
                     {ranked.map((t, i) => (
-                      <div key={t.name} style={{ display: "grid", gridTemplateColumns: "minmax(110px, 170px) 1fr auto", alignItems: "center", gap: "14px", padding: "11px 0", borderBottom: i < ranked.length - 1 ? "1px solid #EEF0E9" : "none" }}>
+                      <div key={t.name} style={{ display: "grid", gridTemplateColumns: "minmax(0, 170px) minmax(70px, 1fr) auto", alignItems: "center", gap: "14px", padding: "11px 0", borderBottom: i < ranked.length - 1 ? "1px solid #EEF0E9" : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 600, minWidth: 0 }}>
                           <span style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: colorOf(t.name), border: "1px solid #C7CABB" }} />
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
                         </div>
                         <div style={{ height: "8px", background: "#EEF0E9", borderRadius: "4px", overflow: "hidden" }}>
-                          <div style={{ width: `${pct(t.count)}%`, height: "100%", background: colorOf(t.name), borderRadius: "4px", transition: "width .6s ease" }} />
+                          <div style={{ width: `${(t.count * 100) / maxCount}%`, height: "100%", background: colorOf(t.name), borderRadius: "4px", transition: "width .6s ease" }} />
                         </div>
-                        <div className="pc-mono" style={{ fontSize: "12px", textAlign: "right", minWidth: "92px" }}>
+                        <div className="pc-mono" style={{ fontSize: "12px", textAlign: "right", minWidth: "84px" }}>
                           <strong style={{ color: "#14213D" }}>{pct(t.count).toFixed(1)}%</strong>
                           <span style={{ color: "#8B8E7E" }}> · {t.count}</span>
                         </div>
