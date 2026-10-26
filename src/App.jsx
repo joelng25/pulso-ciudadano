@@ -742,33 +742,54 @@ export default function App() {
               {votesLoading ? "Actualizando…" : `${totalVotes} papeleta${totalVotes === 1 ? "" : "s"} contabilizada${totalVotes === 1 ? "" : "s"}`}
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "40px" }}>
-              {tallies.map((t) => (
-                <div key={t.name} style={{ display: "flex", alignItems: "center", gap: "18px" }}>
-                  <div style={{ width: "150px", fontSize: "13px", fontWeight: 600, flexShrink: 0 }}>{t.name}</div>
-                  <TallyGroup count={t.count} />
-                  <div className="pc-mono" style={{ fontSize: "12px", color: "#8C4B2F", marginLeft: "auto" }}>{t.count}</div>
-                </div>
-              ))}
-            </div>
-
-            {totalVotes > 0 && (
-              <div style={{ height: `${Math.max(180, tallies.length * 46)}px`, marginBottom: "40px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={tallies} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#D7D9CD" horizontal={false} />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "#3A4258" }} />
-                    <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12, fill: "#14213D" }} />
-                    <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "4px", border: "1px solid #D7D9CD" }} />
-                    <Bar dataKey="count" radius={[0, 3, 3, 0]}>
-                      {tallies.map((t, i) => (
-                        <Cell key={i} fill={candidateColors[t.name] || PALETTE[i % PALETTE.length]} />
+            {(() => {
+              const ranked = [...tallies].sort((a, b) => b.count - a.count);
+              const colorOf = (name) => candidateColors[name] || PALETTE[Math.max(0, candidates.indexOf(name)) % PALETTE.length];
+              const pct = (n) => (totalVotes ? (n * 100) / totalVotes : 0);
+              const top = ranked.filter((t) => t.count > 0).slice(0, 3);
+              return (
+                <>
+                  {top.length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+                      {top.map((t, i) => (
+                        <div key={t.name} style={{ background: "#fff", border: "1px solid #D7D9CD", borderTop: `4px solid ${colorOf(t.name)}`, borderRadius: "6px", padding: "14px 16px" }}>
+                          <div className="pc-mono" style={{ fontSize: "11px", color: "#8B8E7E", textTransform: "uppercase", letterSpacing: "0.06em" }}>{i + 1}.º puesto</div>
+                          <div style={{ fontWeight: 700, fontSize: "15px", margin: "4px 0 2px" }}>{t.name}</div>
+                          <div className="pc-display" style={{ fontSize: "30px", fontWeight: 600, lineHeight: 1.1 }}>{pct(t.count).toFixed(1)}%</div>
+                          <div className="pc-mono" style={{ fontSize: "11px", color: "#3A4258" }}>{t.count} votos</div>
+                        </div>
                       ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+                    </div>
+                  )}
+
+                  {totalVotes > 0 && (
+                    <div aria-hidden="true" style={{ display: "flex", height: "14px", borderRadius: "7px", overflow: "hidden", marginBottom: "28px", border: "1px solid #D7D9CD" }}>
+                      {ranked.filter((t) => t.count > 0).map((t) => (
+                        <div key={t.name} title={`${t.name}: ${pct(t.count).toFixed(1)}%`} style={{ width: `${pct(t.count)}%`, background: colorOf(t.name) }} />
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ background: "#fff", border: "1px solid #D7D9CD", borderRadius: "6px", padding: "8px 18px", marginBottom: "40px" }}>
+                    {ranked.map((t, i) => (
+                      <div key={t.name} style={{ display: "grid", gridTemplateColumns: "minmax(110px, 170px) 1fr auto", alignItems: "center", gap: "14px", padding: "11px 0", borderBottom: i < ranked.length - 1 ? "1px solid #EEF0E9" : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 600, minWidth: 0 }}>
+                          <span style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: colorOf(t.name), border: "1px solid #C7CABB" }} />
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
+                        </div>
+                        <div style={{ height: "8px", background: "#EEF0E9", borderRadius: "4px", overflow: "hidden" }}>
+                          <div style={{ width: `${pct(t.count)}%`, height: "100%", background: colorOf(t.name), borderRadius: "4px", transition: "width .6s ease" }} />
+                        </div>
+                        <div className="pc-mono" style={{ fontSize: "12px", textAlign: "right", minWidth: "92px" }}>
+                          <strong style={{ color: "#14213D" }}>{pct(t.count).toFixed(1)}%</strong>
+                          <span style={{ color: "#8B8E7E" }}> · {t.count}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
 
             {totalVotes > 0 && (
               <div style={{ marginBottom: "40px" }}>
