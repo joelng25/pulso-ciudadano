@@ -27,26 +27,8 @@ create table if not exists votes (
 alter table candidates enable row level security;
 alter table votes enable row level security;
 
--- "to anon" solo cubre visitantes sin sesión. Como ahora también hay gente
--- que entra con Google (rol "authenticated"), usamos "to public" para que
--- las políticas apliquen a cualquier visitante, con o sin sesión.
-
--- Cualquiera puede leer las listas
-create policy "public read candidates" on candidates
-  for select to public using (true);
-
--- Cualquiera puede leer los resultados agregados
-create policy "public read votes" on votes
-  for select to public using (true);
-
--- Cualquiera puede registrar su voto (la columna email es UNIQUE,
--- así que la propia base de datos impide el doble voto)
-create policy "public insert votes" on votes
-  for insert to public with check (true);
-
--- Permite actualizar un voto ya existente (para la opción "cambiar mi voto").
--- Igual que con el insert, no hay verificación criptográfica del correo:
--- cualquiera que conozca un email podría en teoría modificar ese voto.
--- Es el mismo modelo de confianza que ya usa el resto de la app.
-create policy "public update votes" on votes
-  for update to public using (true) with check (true);
+GRANT SELECT ON public.candidates TO anon, authenticated;
+GRANT ALL ON public.candidates, public.votes TO service_role;
+CREATE POLICY "public read candidates" ON public.candidates FOR SELECT TO anon, authenticated USING (true);
+-- Do not grant raw vote access. Apply security-hardening.sql next for safe RPC operations.
+REVOKE ALL ON public.votes FROM anon, authenticated;
