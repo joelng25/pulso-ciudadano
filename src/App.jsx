@@ -550,53 +550,55 @@ export default function App() {
       <div className="pc-content" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 24px" }}>
         {step === "landing" && (
           <div className="pc-hero" style={{ padding: "72px 0 56px" }}>
-            <div className="pc-mono" style={{ fontSize: "12px", letterSpacing: "0.08em", color: "#8C4B2F", marginBottom: "18px", textTransform: "uppercase" }}>
-              Encuesta de opinión · No oficial
-            </div>
-            <h1 className="pc-display" style={{ fontSize: "48px", lineHeight: 1.08, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 20px" }}>
-              Antes de que cuenten los votos, cuéntanos el tuyo.
-            </h1>
-            <p style={{ fontSize: "17px", lineHeight: 1.6, color: "#3A4258", maxWidth: "560px", margin: "0 0 32px" }}>
-              Un sondeo de opinión abierto sobre las próximas elecciones. Regístrate, marca tu preferencia
-              y observa cómo se acumulan las papeletas en tiempo real, lista por lista.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px", maxWidth: "320px" }}>
-              <button
-                onClick={handleGoogleLogin}
-                className="pc-btn"
-                style={{ background: "#fff", color: "#14213D", border: "1px solid #C7CABB", padding: "12px 20px", borderRadius: "3px", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                  <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
-                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/>
-                  <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.16.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/>
-                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
-                </svg>
-                Continuar con Google
-              </button>
+            <div className="pc-hero-copy">
+              <div className="pc-mono" style={{ fontSize: "12px", letterSpacing: "0.08em", color: "#8C4B2F", marginBottom: "18px", textTransform: "uppercase" }}>
+                Encuesta de opinión · No oficial
+              </div>
+              <h1 className="pc-display" style={{ fontSize: "48px", lineHeight: 1.08, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 20px" }}>
+                Antes de que cuenten los votos, cuéntanos el tuyo.
+              </h1>
+              <p style={{ fontSize: "17px", lineHeight: 1.6, color: "#3A4258", maxWidth: "560px", margin: "0 0 32px" }}>
+                Un sondeo de opinión abierto sobre las próximas elecciones. Regístrate, marca tu preferencia
+                y observa cómo se acumulan las papeletas en tiempo real, lista por lista.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px", maxWidth: "320px" }}>
+                <button
+                  onClick={handleGoogleLogin}
+                  className="pc-btn"
+                  style={{ background: "#fff", color: "#14213D", border: "1px solid #C7CABB", padding: "12px 20px", borderRadius: "3px", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/>
+                    <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.16.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+                  </svg>
+                  Continuar con Google
+                </button>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "#8B8E7E", fontSize: "12px" }}>
-                <div style={{ flex: 1, height: "1px", background: "#D7D9CD" }} />
-                o
-                <div style={{ flex: 1, height: "1px", background: "#D7D9CD" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "#8B8E7E", fontSize: "12px" }}>
+                  <div style={{ flex: 1, height: "1px", background: "#D7D9CD" }} />
+                  o
+                  <div style={{ flex: 1, height: "1px", background: "#D7D9CD" }} />
+                </div>
+
+                <button
+                  onClick={handleGoogleLogin}
+                  className="pc-btn"
+                  style={{ background: "#14213D", color: "#EEF0E9", border: "none", padding: "13px 26px", borderRadius: "3px", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                >
+                  Verificar mi cuenta <ChevronRight size={16} />
+                </button>
               </div>
 
-              <button
-                onClick={handleGoogleLogin}
-                className="pc-btn"
-                style={{ background: "#14213D", color: "#EEF0E9", border: "none", padding: "13px 26px", borderRadius: "3px", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-              >
-                Verificar mi cuenta <ChevronRight size={16} />
-              </button>
-            </div>
-
-            <div style={{ marginTop: "56px", padding: "20px 22px", background: "#fff", border: "1px solid #D7D9CD", borderRadius: "4px" }}>
-              <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                <ShieldCheck size={18} color="#2E5339" style={{ flexShrink: 0, marginTop: "2px" }} />
-                <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#3A4258", margin: 0 }}>
-                  Este sitio recoge opiniones con fines de sondeo público y no sustituye ni forma parte de
-                  ningún proceso electoral oficial. Una cuenta verificada, un voto. No garantiza una persona única: puedes tener varias cuentas.
-                </p>
+              <div style={{ marginTop: "56px", padding: "20px 22px", background: "#fff", border: "1px solid #D7D9CD", borderRadius: "4px" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                  <ShieldCheck size={18} color="#2E5339" style={{ flexShrink: 0, marginTop: "2px" }} />
+                  <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#3A4258", margin: 0 }}>
+                    Este sitio recoge opiniones con fines de sondeo público y no sustituye ni forma parte de
+                    ningún proceso electoral oficial. Una cuenta verificada, un voto. No garantiza una persona única: puedes tener varias cuentas.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -886,19 +888,17 @@ export default function App() {
               );
             })()}
 
-            {totalVotes > 0 && (
-              <div style={{ marginBottom: "40px" }}>
-                <h3 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 16px" }}>
-                  Mapa por comunidad autónoma · pulsa para ver el detalle
-                </h3>
-                <SpainMap
-                  regionWinners={regionWinners}
-                  regionCounts={regionCandidateCounts}
-                  candidateColors={candidateColors}
-                  candidates={candidates}
-                />
-              </div>
-            )}
+            <div style={{ marginBottom: "40px" }}>
+              <h3 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 16px" }}>
+                Mapa por comunidad autónoma · pulsa para ver el detalle
+              </h3>
+              <SpainMap
+                regionWinners={regionWinners}
+                regionCounts={regionCandidateCounts}
+                candidateColors={candidateColors}
+                candidates={candidates}
+              />
+            </div>
 
             {regionEntries.length > 0 && (
               <div>

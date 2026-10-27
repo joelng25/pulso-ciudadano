@@ -27,16 +27,21 @@ body {
 
 .pc-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.55fr);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.55fr);
   gap: 48px;
   align-items: center;
+}
+
+.pc-hero-copy {
+  min-width: 0;
 }
 
 .pc-hero::after {
   content: "52 provincias\\A resultados claros\\A una opinión por cuenta";
   white-space: pre;
   justify-self: end;
-  width: 210px;
+  width: auto;
+  max-width: 210px;
   padding: 28px 24px;
   border: 1px solid #d7d9cd;
   border-radius: 18px;
@@ -172,11 +177,16 @@ body {
     display: block;
   }
 
+  .pc-hero-copy h1 {
+    font-size: 40px !important;
+  }
+
   .pc-hero::after {
     display: none;
   }
 
   .pc-header {
+    padding: 14px 16px !important;
     align-items: flex-start !important;
     gap: 12px;
   }
@@ -184,6 +194,15 @@ body {
   .pc-header > div:last-child {
     flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 8px !important;
+  }
+
+  .pc-header > div:last-child > span {
+    display: none;
+  }
+
+  .pc-content {
+    padding: 0 16px !important;
   }
 
   .pc-region-grid {
