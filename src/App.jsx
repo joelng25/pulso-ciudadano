@@ -46,6 +46,28 @@ const COMUNIDADES_AUTONOMAS = [
   "Melilla",
 ];
 
+const PROVINCIAS_POR_COMUNIDAD = {
+  Andalucía: ["Almería", "Cádiz", "Córdoba", "Granada", "Huelva", "Jaén", "Málaga", "Sevilla"],
+  Aragón: ["Huesca", "Teruel", "Zaragoza"],
+  Asturias: ["Asturias"],
+  "Islas Baleares": ["Illes Balears"],
+  Canarias: ["Las Palmas", "Santa Cruz de Tenerife"],
+  Cantabria: ["Cantabria"],
+  "Castilla-La Mancha": ["Albacete", "Ciudad Real", "Cuenca", "Guadalajara", "Toledo"],
+  "Castilla y León": ["Ávila", "Burgos", "León", "Palencia", "Salamanca", "Segovia", "Soria", "Valladolid", "Zamora"],
+  Cataluña: ["Barcelona", "Girona", "Lleida", "Tarragona"],
+  Extremadura: ["Badajoz", "Cáceres"],
+  Galicia: ["A Coruña", "Lugo", "Ourense", "Pontevedra"],
+  "La Rioja": ["La Rioja"],
+  "Comunidad de Madrid": ["Madrid"],
+  "Región de Murcia": ["Murcia"],
+  Navarra: ["Navarra"],
+  "País Vasco": ["Álava", "Bizkaia", "Gipuzkoa"],
+  "Comunidad Valenciana": ["Alicante", "Castellón", "Valencia"],
+  Ceuta: ["Ceuta"],
+  Melilla: ["Melilla"],
+};
+
 function SpainMap({ regionWinners, regionCounts, candidateColors, candidates }) {
   const [hovered, setHovered] = useState(null);
   const [picked, setPicked] = useState(null);
@@ -241,7 +263,7 @@ export default function App() {
   const [candidates, setCandidates] = useState(DEFAULT_CANDIDATES);
   const [candidateColors, setCandidateColors] = useState({});
   const [candidateRegions, setCandidateRegions] = useState({});
-  const [form, setForm] = useState({ name: "", email: "", region: "" });
+  const [form, setForm] = useState({ name: "", email: "", region: "", province: "" });
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -283,7 +305,10 @@ export default function App() {
 
   const loadVotes = useCallback(async () => {
     setVotesLoading(true);
-    const { data, error: err } = await supabase.rpc("vote_results");
+    let { data, error: err } = await supabase.rpc("vote_results_by_province");
+    if (err) {
+      ({ data, error: err } = await supabase.rpc("vote_results"));
+    }
     if (!err && data) setVotes(data);
     else setError("No se pudieron cargar los recuentos. Revisa la configuración segura del servicio.");
     setVotesLoading(false);
@@ -324,7 +349,7 @@ export default function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
-    setForm({ name: "", email: "", region: "" });
+    setForm({ name: "", email: "", region: "", province: "" });
     setIsEditingVote(false);
     setStep("landing");
   };
@@ -336,8 +361,8 @@ export default function App() {
   const handleRegisterSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setError("");
-    if (!form.name.trim() || !form.email.trim() || !form.region.trim()) {
-      setError("Completa los tres campos para continuar.");
+    if (!form.name.trim() || !form.email.trim() || !form.region.trim() || !form.province.trim()) {
+      setError("Completa tus datos y selecciona comunidad y provincia.");
       return;
     }
     if (!EMAIL_REGEX.test(form.email.trim())) {
@@ -377,6 +402,7 @@ export default function App() {
       const { error: err } = await supabase.rpc("cast_vote", {
         voter_name: form.name.trim(),
         voter_region: form.region.trim(),
+        voter_province: form.province.trim(),
         selected_candidate: selected,
       });
       if (err) throw err;
@@ -414,11 +440,14 @@ export default function App() {
   const totalVotes = votes.reduce((sum,v) => sum + Number(v.vote_count),0);
 
   const regionMap = {};
+  const provinceMap = {};
   votes.forEach((v) => {
     const r = v.region || "Sin región";
     regionMap[r] = (regionMap[r] || 0) + Number(v.vote_count);
+    if (v.province) provinceMap[v.province] = (provinceMap[v.province] || 0) + Number(v.vote_count);
   });
   const regionEntries = Object.entries(regionMap).sort((a, b) => b[1] - a[1]);
+  const provinceEntries = Object.entries(provinceMap).sort((a, b) => b[1] - a[1]);
 
   // Conteo de votos por candidato dentro de cada comunidad, y el candidato
   // con más votos en cada una (para colorear el mapa).
@@ -439,6 +468,16 @@ export default function App() {
       }
     });
     regionWinners[region] = winner;
+  });
+  const regionOverview = COMUNIDADES_AUTONOMAS.map((region) => {
+    const counts = regionCandidateCounts[region] || {};
+    const total = Object.values(counts).reduce((sum, count) => sum + Number(count), 0);
+    return {
+      region,
+      total,
+      winner: regionWinners[region],
+      winnerCount: regionWinners[region] ? Number(counts[regionWinners[region]]) : 0,
+    };
   });
 
   if (!isSupabaseConfigured) {
@@ -462,7 +501,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100%", background: "#EEF0E9", color: "#14213D", fontFamily: "'Inter', sans-serif" }}>
+    <div className="pc-app" style={{ minHeight: "100%", background: "#EEF0E9", color: "#14213D", fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         .pc-display { font-family: 'Fraunces', serif; }
@@ -476,7 +515,7 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) { .pc-btn, .pc-card { transition: none; } }
       `}</style>
 
-      <div style={{ borderBottom: "1px solid #D7D9CD", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="pc-header" style={{ borderBottom: "1px solid #D7D9CD", padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#B8862B" }} />
           <span className="pc-display" style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.01em" }}>
@@ -508,9 +547,9 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ maxWidth: "760px", margin: "0 auto", padding: "0 24px" }}>
+      <div className="pc-content" style={{ maxWidth: "960px", margin: "0 auto", padding: "0 24px" }}>
         {step === "landing" && (
-          <div style={{ padding: "72px 0 56px" }}>
+          <div className="pc-hero" style={{ padding: "72px 0 56px" }}>
             <div className="pc-mono" style={{ fontSize: "12px", letterSpacing: "0.08em", color: "#8C4B2F", marginBottom: "18px", textTransform: "uppercase" }}>
               Encuesta de opinión · No oficial
             </div>
@@ -570,8 +609,8 @@ export default function App() {
             </h2>
             <p style={{ color: "#3A4258", fontSize: "14px", margin: "0 0 28px" }}>
               {session?.user
-                ? "Verificamos tu cuenta con Google, no tu identidad civil. Solo falta tu región."
-                : "Solo lo usamos para evitar votos duplicados y agrupar resultados por región."}
+                ? "Verificamos tu cuenta con Google, no tu identidad civil. Solo faltan comunidad y provincia."
+                : "Solo lo usamos para evitar votos duplicados y mostrar los resultados por provincia."}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "420px" }}>
               <label style={{ fontSize: "13px", fontWeight: 600, display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -600,7 +639,7 @@ export default function App() {
                 Comunidad autónoma
                 <select
                   value={form.region}
-                  onChange={(e) => setForm({ ...form, region: e.target.value })}
+                  onChange={(e) => setForm({ ...form, region: e.target.value, province: "" })}
                   style={{
                     padding: "11px 12px",
                     border: "1px solid #C7CABB",
@@ -618,6 +657,33 @@ export default function App() {
                   {COMUNIDADES_AUTONOMAS.map((c) => (
                     <option key={c} value={c}>
                       {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ fontSize: "13px", fontWeight: 600, display: "flex", flexDirection: "column", gap: "6px" }}>
+                Provincia
+                <select
+                  value={form.province}
+                  disabled={!form.region}
+                  onChange={(e) => setForm({ ...form, province: e.target.value })}
+                  style={{
+                    padding: "11px 12px",
+                    border: "1px solid #C7CABB",
+                    borderRadius: "3px",
+                    fontSize: "14px",
+                    fontFamily: "'Inter', sans-serif",
+                    background: form.region ? "#fff" : "#F1EFE6",
+                    color: form.province ? "#14213D" : "#8B8E7E",
+                    cursor: form.region ? "pointer" : "not-allowed",
+                  }}
+                >
+                  <option value="" disabled>
+                    {form.region ? "Selecciona tu provincia" : "Primero selecciona una comunidad"}
+                  </option>
+                  {(PROVINCIAS_POR_COMUNIDAD[form.region] || []).map((province) => (
+                    <option key={province} value={province}>
+                      {province}
                     </option>
                   ))}
                 </select>
@@ -739,8 +805,36 @@ export default function App() {
 
             <h2 className="pc-display" style={{ fontSize: "30px", fontWeight: 600, margin: "0 0 4px" }}>Resultados en vivo</h2>
             <p className="pc-mono" style={{ fontSize: "12px", color: "#3A4258", margin: "0 0 32px" }}>
-              {votesLoading ? "Actualizando…" : `${totalVotes} papeleta${totalVotes === 1 ? "" : "s"} contabilizada${totalVotes === 1 ? "" : "s"}`}
+              {votesLoading ? "Actualizando…" : `${totalVotes} papeleta${totalVotes === 1 ? "" : "s"} contabilizada${totalVotes === 1 ? "" : "s"} · resultados agregados`}
             </p>
+
+            <section className="pc-region-overview" aria-label="Resumen por comunidad autónoma">
+              <div className="pc-section-heading">
+                <div>
+                  <h3 className="pc-mono">Todas las comunidades</h3>
+                  <p>Ganador y participación de cada territorio, de un vistazo.</p>
+                </div>
+                <span className="pc-mono">{regionOverview.length} territorios</span>
+              </div>
+              <div className="pc-region-grid">
+                {regionOverview.map(({ region, total, winner, winnerCount }) => (
+                  <div className={`pc-region-card${winner ? " pc-region-card-active" : ""}`} key={region}>
+                    <div className="pc-region-card-top">
+                      <span>{region}</span>
+                      <strong className="pc-mono">{total}</strong>
+                    </div>
+                    <div className="pc-region-winner">
+                      {winner || "Sin votos"}
+                    </div>
+                    {winner && (
+                      <div className="pc-region-bar" aria-hidden="true">
+                        <span style={{ width: `${(winnerCount * 100) / total}%` }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
 
             {(() => {
               const ranked = [...tallies].sort((a, b) => b.count - a.count);
@@ -816,6 +910,22 @@ export default function App() {
                     <div key={region} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #D7D9CD", fontSize: "14px" }}>
                       <span>{region}</span>
                       <span className="pc-mono" style={{ color: "#8C4B2F" }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {provinceEntries.length > 0 && (
+              <div style={{ marginTop: "36px" }}>
+                <h3 className="pc-mono" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3A4258", margin: "0 0 12px" }}>
+                  Resultados por provincia
+                </h3>
+                <div className="pc-province-grid">
+                  {provinceEntries.map(([province, count]) => (
+                    <div className="pc-province-card" key={province}>
+                      <span>{province}</span>
+                      <strong className="pc-mono">{count}</strong>
                     </div>
                   ))}
                 </div>

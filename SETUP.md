@@ -5,7 +5,7 @@ Instrucciones completas para montar tu propia copia de Pulso Ciudadano.
 ## 1. Backend (Supabase)
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta el contenido de [`supabase-setup.sql`](./supabase-setup.sql).
+2. En **SQL Editor**, ejecuta [`supabase-setup.sql`](./supabase-setup.sql), después [`provincias.sql`](./provincias.sql) y finalmente [`security-hardening.sql`](./security-hardening.sql).
 3. Copia tu `Project URL` y tu clave `anon public` desde **Project Settings → API**.
 
 ## 2. Frontend (local)
@@ -56,7 +56,9 @@ Esto requiere dos configuraciones externas (una en Google, una en Supabase):
 
 Aplica `security-hardening.sql` en el servicio de Pulso (no en el portafolio), después de una copia de seguridad y antes de desplegar esta versión. No elimina votos. Bloquea lectura/escritura directa de filas y ofrece únicamente recuentos públicos y operaciones sobre el voto propio de cuentas verificadas. Google ya no es opcional para votar.
 
-Las filas antiguas sin `user_id` se conservan; no pueden reclamarse automáticamente por correo. Su vinculación requiere un proceso revisado por el propietario. No recrees las antiguas políticas públicas. Prueba con dos cuentas verificadas distintas que una no puede modificar el voto de la otra y que una solicitud sin sesión no puede votar. La aplicación no demuestra que cada cuenta sea una persona distinta.
+Las filas antiguas sin `user_id` se conservan; no pueden reclamarse automáticamente por correo. Su vinculación requiere un proceso revisado por el propietario. No recrees las antiguas políticas públicas. Prueba con dos cuentas verificadas distintas que una no puede modificar el voto de la otra y que una solicitud sin sesión no puede votar. La aplicación no demuestra que cada cuenta sea una persona distinta. Los votos antiguos sin provincia se mantienen como legacy y no se asignan automáticamente.
+
+Para cargar el conjunto de demostración provincial, ejecuta [`sondeo-ejemplo.sql`](./sondeo-ejemplo.sql) y después [`sondeo-provincias.sql`](./sondeo-provincias.sql). Esa distribución es sintética y debe mostrarse siempre como sondeo, nunca como resultado oficial.
 
 ## 5. Recibir un email cada vez que alguien vota
 

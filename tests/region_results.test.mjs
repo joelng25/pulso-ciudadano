@@ -1,6 +1,6 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict'; import fs from 'node:fs';
 const src = fs.readFileSync('src/App.jsx','utf8');
-const fn = src.match(/export function regionResults[\s\S]*?\n}\n/)[0].replace('export ','');
+const fn = src.match(/export function regionResults[\s\S]*?\r?\n}\r?\n/)[0].replace('export ','');
 const regionResults = new Function(fn + '; return regionResults;')();
 test('comunidad breakdown sorts by votes and computes shares', () => {
   const { total, rows } = regionResults({ PP: 3, ERC: 1 });

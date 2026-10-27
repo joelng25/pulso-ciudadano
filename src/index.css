@@ -6,3 +6,187 @@ html, body, #root {
   height: 100%;
   margin: 0;
 }
+
+body {
+  background: #eef0e9;
+}
+
+.pc-app {
+  background:
+    radial-gradient(circle at 85% 0%, rgba(184, 134, 43, 0.13), transparent 28rem),
+    #eef0e9 !important;
+}
+
+.pc-header {
+  background: rgba(238, 240, 233, 0.86);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.pc-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.55fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.pc-hero::after {
+  content: "52 provincias\\A resultados claros\\A una opinión por cuenta";
+  white-space: pre;
+  justify-self: end;
+  width: 210px;
+  padding: 28px 24px;
+  border: 1px solid #d7d9cd;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #3a4258;
+  font: 600 13px/2 'IBM Plex Mono', monospace;
+  box-shadow: 0 18px 40px rgba(20, 33, 61, 0.08);
+}
+
+.pc-province-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.pc-province-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #d7d9cd;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.pc-province-card strong {
+  color: #8c4b2f;
+}
+
+.pc-region-overview {
+  margin-bottom: 36px;
+  padding: 18px;
+  border: 1px solid #d7d9cd;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.pc-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.pc-section-heading h3 {
+  margin: 0;
+  color: #14213d;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pc-section-heading p {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.pc-section-heading > span {
+  color: #8b8e7e;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.pc-region-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pc-region-card {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #e1e3da;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.pc-region-card-active {
+  border-color: #c7cabb;
+}
+
+.pc-region-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  color: #3a4258;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.pc-region-card-top span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-region-card-top strong {
+  flex-shrink: 0;
+  color: #8c4b2f;
+  font-size: 10px;
+}
+
+.pc-region-winner {
+  overflow: hidden;
+  margin-top: 8px;
+  color: #14213d;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pc-region-bar {
+  height: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #eef0e9;
+}
+
+.pc-region-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #b8862b;
+}
+
+@media (max-width: 700px) {
+  .pc-hero {
+    display: block;
+  }
+
+  .pc-hero::after {
+    display: none;
+  }
+
+  .pc-header {
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .pc-header > div:last-child {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .pc-region-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

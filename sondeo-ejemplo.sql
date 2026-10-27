@@ -1,11 +1,8 @@
--- Datos de ejemplo: media de las 6 encuestas más recientes y completas de la página de Wikipedia
--- "Opinion polling for the 2026 Spanish general election" (consultada el 26/10/2026):
--- SocioMétrica (1 sep-25 oct), NC Report (22-24 oct), EM-Analytics (17-23 oct), Sigma Dos (8-22 oct),
--- EM-Analytics (15-17 oct) y Sigma Dos (1-14 oct). Los partidos regionales se promedian sin NC Report.
--- Media (% voto): PP 31,7 · PSOE 26,3 · Vox 19,2 · Frente Amplio (incl. FV) 7,2 · SALF 2,2 · ERC 2,4
---   · Junts 1,3 · EH Bildu 1,3 · Podemos 1,3 · PNV 0,9 · BNG 0,9 · CC 0,4 · UPN 0,2 (aprox.) · resto blanco/indeciso.
--- Crea 1999 votos ficticios repartidos por población de cada comunidad; los partidos regionales
--- solo reciben votos donde se presentan. No toca votos reales.
+-- Datos de demostración del sondeo, no resultados oficiales.
+-- El reparto nacional es orientativo y las comunidades con candidaturas
+-- territoriales se modelan por separado: Cataluña no se fuerza a favor del PP,
+-- EH Bildu/EAJ-PNV tienen peso en Euskadi y Navarra, y CC en Canarias.
+-- Crea votos ficticios repartidos por comunidad; no toca votos reales.
 --
 -- Se puede volver a ejecutar: primero borra los votos de ejemplo anteriores.
 -- Para quitarlos del todo, ejecuta solo la línea DELETE.
@@ -54,7 +51,7 @@ FROM (VALUES
   ('Canarias','Podemos',1),
   ('Canarias','Se Acabó La Fiesta',2),
   ('Canarias','Voto en blanco / Indeciso',4),
-  ('Canarias','Coalición Canaria',8),
+  ('Canarias','Coalición Canaria',35),
   ('Cantabria','PP',8),
   ('Cantabria','PSOE',7),
   ('Cantabria','Vox',5),
@@ -75,15 +72,15 @@ FROM (VALUES
   ('Castilla y León','Podemos',1),
   ('Castilla y León','Se Acabó La Fiesta',2),
   ('Castilla y León','Voto en blanco / Indeciso',5),
-  ('Cataluña','PP',88),
-  ('Cataluña','PSOE',73),
-  ('Cataluña','Vox',53),
-  ('Cataluña','Frente Amplio',20),
-  ('Cataluña','Podemos',4),
-  ('Cataluña','Se Acabó La Fiesta',6),
-  ('Cataluña','Voto en blanco / Indeciso',13),
-  ('Cataluña','ERC',48),
-  ('Cataluña','Junts per Catalunya',26),
+  ('Cataluña','PSOE',98),
+  ('Cataluña','ERC',86),
+  ('Cataluña','Junts per Catalunya',72),
+  ('Cataluña','PP',42),
+  ('Cataluña','Vox',31),
+  ('Cataluña','Frente Amplio',24),
+  ('Cataluña','Podemos',6),
+  ('Cataluña','Se Acabó La Fiesta',4),
+  ('Cataluña','Voto en blanco / Indeciso',16),
   ('Extremadura','PP',15),
   ('Extremadura','PSOE',12),
   ('Extremadura','Vox',9),
@@ -118,23 +115,23 @@ FROM (VALUES
   ('Región de Murcia','Podemos',1),
   ('Región de Murcia','Se Acabó La Fiesta',2),
   ('Región de Murcia','Voto en blanco / Indeciso',3),
-  ('Navarra','PP',6),
-  ('Navarra','PSOE',5),
-  ('Navarra','Vox',4),
+  ('Navarra','EH Bildu',16),
+  ('Navarra','UPN',14),
+  ('Navarra','PSOE',12),
+  ('Navarra','PP',8),
+  ('Navarra','Vox',5),
   ('Navarra','Frente Amplio',1),
   ('Navarra','Se Acabó La Fiesta',1),
   ('Navarra','Voto en blanco / Indeciso',1),
-  ('Navarra','EH Bildu',6),
-  ('Navarra','UPN',4),
-  ('País Vasco','PP',18),
-  ('País Vasco','PSOE',15),
-  ('País Vasco','Vox',11),
-  ('País Vasco','Frente Amplio',4),
+  ('País Vasco','EH Bildu',45),
+  ('País Vasco','EAJ-PNV',38),
+  ('País Vasco','PSOE',25),
+  ('País Vasco','PP',12),
+  ('País Vasco','Vox',7),
+  ('País Vasco','Frente Amplio',6),
   ('País Vasco','Podemos',1),
   ('País Vasco','Se Acabó La Fiesta',1),
   ('País Vasco','Voto en blanco / Indeciso',3),
-  ('País Vasco','EH Bildu',20),
-  ('País Vasco','EAJ-PNV',18),
   ('Comunidad Valenciana','PP',75),
   ('Comunidad Valenciana','PSOE',62),
   ('Comunidad Valenciana','Vox',46),
