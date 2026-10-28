@@ -1,64 +1,116 @@
-# 🗳️ Pulso Ciudadano
+# Pulso Ciudadano
 
-Una web de sondeo de opinión electoral: la gente entra, dice a quién votaría
-y ve en tiempo real cómo va la encuesta, papeleta a papeleta.
+*Sondeo de opinión en vivo: una cuenta verificada, un voto, solo recuentos agregados.*  
+*Sondeig d'opinió en directe: un compte verificat, un vot, només recomptes agregats.*
 
-> Es una **encuesta de opinión independiente**, no un proceso electoral
-> oficial ni un sistema de votación certificado — más parecido a esos
-> sondeos que publican los medios, pero abierto y con los resultados
-> siempre a la vista.
+**A live opinion poll for Spain: sign in with Google, cast one ballot, and watch the public tally move by party, autonomous community, and province.**
 
-## Cómo funciona
+It is an independent survey. It is not an official election and not a certified voting system.
 
-**1. Te identificas.** Con un clic en "Continuar con Google", o escribiendo
-tu nombre, correo y comunidad autónoma a mano.
+Frontend project by Joel Novio Garcia.
 
-**2. Marcas tu papeleta.** Una lista de candidaturas en formato de voto,
-una papeleta por dirección de correo registrada, que se puede actualizar.
-El formulario manual no verifica que el correo pertenezca a quien lo introduce.
+## The problem
 
-**3. Ves los resultados.** Un recuento en vivo con dos vistas: unas marcas
-de conteo dibujadas a mano (como cuando alguien cuenta votos con lápiz y
-papel) y un gráfico de barras, más el desglose de participación por
-comunidad autónoma.
+Most published polls are a static screenshot. You cannot see how a preference is counted, or how it differs between Barcelona and Badajoz, without trusting a PDF.
 
-## Por qué está hecho así
+Pulso Ciudadano lets someone register a preference and shows everyone else only the running totals: a podium, a ranked bar list, a community grid, and a map of Spain. Names, emails, and individual ballots stay off the public page.
 
-- **Sin servidor propio que mantener.** Toda la base de datos vive en
-  Supabase (Postgres gratuito), así que no hay nada que administrar salvo
-  la propia tabla de datos.
-- **Una papeleta por correo registrado**, mediante un campo único en la
-  base de datos. Esto no garantiza un voto por persona: una persona puede
-  introducir distintas direcciones y el acceso manual no verifica su titularidad.
-- **Las candidaturas y sus colores se editan sin tocar código**, directamente
-  desde una tabla en Supabase.
+## Live demo
 
-## Límites de privacidad y seguridad
+[https://pulso-ciudadano-green.vercel.app/](https://pulso-ciudadano-green.vercel.app/)
 
-El archivo `supabase-setup.sql` permite lectura pública de las filas de votos
-(incluidos nombre, correo y elección) y actualización pública sin comprobar
-la titularidad del correo. No debe utilizarse tal cual para recoger datos
-personales reales ni para un sondeo con garantías de identidad.
+Open **Ver resultados** to see the aggregate tally without signing in. Casting or changing a ballot requires Google sign-in.
 
-Antes de ese uso, hay que proteger los votos con identidad verificada y
-permisos por usuario, y publicar únicamente resultados agregados sin datos
-identificativos. Ocultar campos en la interfaz no protege la base de datos.
-Este aviso documenta el esquema del repositorio; no verifica ni cambia la
-configuración del servicio desplegado.
+## Screenshots
 
-## Tecnología
+Landing page in this version of the UI. The aside reads “52 provincias / resultados claros / una opinión por cuenta”.
 
-React · Vite · Tailwind CSS · Recharts · Supabase (Postgres + Auth)
+![Pulso Ciudadano landing page, with Google sign-in and a note that the survey is not official](docs/screenshots/landing.png)
 
-## ¿Quieres montar tu propia versión?
+Live results on the public demo: one card per autonomous community, then the top three lists. Figures are aggregate counts only.
 
-Toda la parte técnica — crear el proyecto en Supabase, activar el login
-de Google, desplegar en Vercel — está en **[`SETUP.md`](./SETUP.md)**.
+![Live results: community cards and a podium for PP, PSOE, and Vox](docs/screenshots/results.png)
 
-## Licencia
+The same demo, scrolled to the map. Color is the leading list in that community. Canarias sits in its own inset.
 
-MIT — úsalo, modifícalo y despliega tu propia versión libremente.
+![Map of Spain colored by the leading list in each autonomous community, with a party legend and the Canary Islands inset](docs/screenshots/map.png)
 
-## Security hardening (deployment pending)
+## Features
 
-The `security/verified-vote-ownership` branch prepares private raw votes, aggregate-only results and verified account ownership via RPC. Apply `provincias.sql` before `security-hardening.sql` to this application's own database after backup, run two-account access tests, then deploy the matching frontend. Repository tests only verify the intended contract; the live service is not verified or changed. Legacy votes remain intact and are not auto-claimed by email. Verified accounts are not proof of one unique person. Provincial results are aggregate counts; legacy rows without a province remain unassigned to a province but are still included in community totals.
+- Google sign-in before a ballot can be cast or changed.
+- One ballot per verified account. The same account can update it later.
+- Community and province pickers. The ballot only lists candidacies that stand in that community.
+- Public results are grouped counts: community cards, a top-three podium, a share bar, and a ranked list.
+- Clickable SVG map of Spain, including the Canary Islands, with a per-community breakdown.
+- Participation totals by autonomous community and by province.
+- Party names, colors, and where a list stands are edited in Supabase, not hardcoded for the live poll.
+- Optional email when a ballot is saved. The Resend API key lives in Supabase Vault, not in this repo.
+
+## Tech stack
+
+- React 18 and Vite
+- Tailwind CSS, plus a small set of layout classes for the results grid and the map
+- [lucide-react](https://lucide.dev) for icons
+- Supabase: Postgres, Google Auth, Row Level Security, and SQL functions
+- Hosted on Vercel
+
+The bars and the map are custom markup in the page.
+
+## Architecture
+
+The browser is a single React app. It talks to Supabase and never to a custom server.
+
+```text
+React (Vite)
+  ├─ Google sign-in          supabase.auth
+  ├─ read candidacies        public.candidates
+  ├─ my ballot / cast ballot my_vote(), cast_vote()     authenticated
+  └─ public tally            vote_results_by_province() anon + authenticated
+                                      │
+                                      ▼
+                               Postgres (RLS)
+                               votes: no direct client read or write
+                               optional trigger → Resend, key read from Vault
+```
+
+- `candidates` can be read by the client. `votes` cannot. The app does not query vote rows.
+- `cast_vote` and `my_vote` require a verified session. Ownership comes from `auth.uid()`. The email stored on the ballot is the confirmed account email, not a value typed into the form.
+- `vote_results` and `vote_results_by_province` return grouped counts (`region` or `province`, candidacy, `vote_count`). They do not return names, emails, or row ids.
+- A verified account is one ballot. It does not prove that each account is a different person.
+- Older rows with no `user_id` are kept. They are not claimed automatically from an email address.
+
+Apply the SQL to your own project in this order, after a backup: [`supabase-setup.sql`](./supabase-setup.sql), then [`provincias.sql`](./provincias.sql), then [`security-hardening.sql`](./security-hardening.sql). Deploy this frontend after that SQL. Details, Google OAuth, and the Vault step are in [`SETUP.md`](./SETUP.md).
+
+## Run locally
+
+Node.js 18 or newer.
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Edit `.env` and set the two public client values from Supabase → Project Settings → API:
+
+```bash
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key
+```
+
+```bash
+npm run dev
+```
+
+Vite serves the app at [http://localhost:5173](http://localhost:5173).
+
+`.env.example` is the only env file that belongs in git. Do not commit `.env`, `.env.local`, or a service-role key. Do not put a Resend API key in the frontend. Create it in the Supabase SQL editor with `vault.create_secret(...)`, as described in [`SETUP.md`](./SETUP.md). Files named `*.secret.sql` are gitignored for that reason.
+
+Checks that ship with the repo:
+
+```bash
+node --test tests/*.test.cjs tests/*.test.mjs
+```
+
+## License
+
+MIT. Use it, change it, and deploy your own poll.

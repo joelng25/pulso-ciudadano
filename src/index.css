@@ -37,11 +37,11 @@ body {
 }
 
 .pc-hero::after {
-  content: "52 provincias\\A resultados claros\\A una opinión por cuenta";
+  content: "52 provincias\A resultados claros\A una opinión por cuenta";
   white-space: pre;
   justify-self: end;
   width: auto;
-  max-width: 210px;
+  max-width: 240px;
   padding: 28px 24px;
   border: 1px solid #d7d9cd;
   border-radius: 18px;
