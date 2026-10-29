@@ -19,7 +19,7 @@ npm run dev
 
 ## 3. Desplegar
 
-Conecta el repo a [Vercel](https://vercel.com) o [Netlify](https://netlify.com),
+Conecta el repo a [Vercel](https://vercel.com),
 añade las mismas variables de entorno (`VITE_SUPABASE_URL`,
 `VITE_SUPABASE_ANON_KEY`) en el panel del proyecto, y despliega.
 
