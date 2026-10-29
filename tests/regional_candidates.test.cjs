@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');
-const sql=fs.readFileSync('candidaturas-por-comunidad.sql','utf8');
-const demoSql=fs.readFileSync('sondeo-ejemplo.sql','utf8');
+const sql=fs.readFileSync('supabase/migrations/004_candidaturas-por-comunidad.sql','utf8');
+const demoSql=fs.readFileSync('supabase/migrations/007_sondeo-ejemplo.sql','utf8');
 const region=(l)=>{const m=sql.match(new RegExp(`WHEN '${l}' THEN ARRAY\\[([^\\]]*)\\]`));return m?m[1].split(',').map(s=>s.trim().replace(/'/g,'')):null;};
 test('ERC and Junts only in Cataluña',()=>{assert.deepEqual(region('ERC'),['Cataluña']);assert.deepEqual(region('Junts per Catalunya'),['Cataluña']);});
 test('EH Bildu in País Vasco and Navarra, PNV only País Vasco',()=>{assert.deepEqual(region('EH Bildu'),['País Vasco','Navarra']);assert.deepEqual(region('EAJ-PNV'),['País Vasco']);});

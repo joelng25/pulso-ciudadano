@@ -1,5 +1,5 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');
-const sql=fs.readFileSync('security-hardening.sql','utf8');const app=fs.readFileSync('src/App.jsx','utf8');
+const sql=fs.readFileSync('supabase/migrations/003_security-hardening.sql','utf8');const app=fs.readFileSync('src/App.jsx','utf8');
 test('no raw public vote grants',()=>{assert.match(sql,/REVOKE ALL ON public\.votes FROM anon, authenticated/);assert.doesNotMatch(sql,/GRANT (SELECT|INSERT|UPDATE|ALL) ON public\.votes TO (anon|authenticated)/);});
 test('ownership and verification enforced server-side',()=>{assert.match(sql,/WHERE id=auth\.uid\(\) AND email_confirmed_at IS NOT NULL/);assert.match(sql,/VALUES\(trim\(voter_name\),verified_email,trim\(voter_region\),trim\(voter_province\),selected_candidate,auth\.uid\(\)\)/);assert.match(sql,/REVOKE ALL ON FUNCTION public\.cast_vote\(text,text,text,text\) FROM PUBLIC, anon/);assert.match(sql,/voter_province/);});
 test('public result function contains only aggregate fields',()=>{const result=sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.vote_results'));assert.match(result,/RETURNS TABLE\(region text,candidate text,vote_count bigint\)/);assert.match(result,/count\(\*\)/);assert.doesNotMatch(result,/SELECT.*(email|name|user_id)/);assert.doesNotMatch(app,/\.from\("votes"\)/);});

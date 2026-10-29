@@ -79,7 +79,7 @@ React (Vite)
 - A verified account is one ballot. It does not prove that each account is a different person.
 - Older rows with no `user_id` are kept. They are not claimed automatically from an email address.
 
-Apply the SQL to your own project in this order, after a backup: [`supabase-setup.sql`](./supabase-setup.sql), then [`provincias.sql`](./provincias.sql), then [`security-hardening.sql`](./security-hardening.sql). Deploy this frontend after that SQL. Details, Google OAuth, and the Vault step are in [`SETUP.md`](./SETUP.md).
+Apply the SQL to your own project in this order, after a backup: [`001_supabase-setup.sql`](./supabase/migrations/001_supabase-setup.sql), then [`002_provincias.sql`](./supabase/migrations/002_provincias.sql), then [`003_security-hardening.sql`](./supabase/migrations/003_security-hardening.sql). Deploy this frontend after that SQL. Details, Google OAuth, and the Vault step are in [`SETUP.md`](./SETUP.md).
 
 ## Run locally
 

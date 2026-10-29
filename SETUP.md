@@ -5,7 +5,7 @@ Instrucciones completas para montar tu propia copia de Pulso Ciudadano.
 ## 1. Backend (Supabase)
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta [`supabase-setup.sql`](./supabase-setup.sql), después [`provincias.sql`](./provincias.sql) y finalmente [`security-hardening.sql`](./security-hardening.sql).
+2. En **SQL Editor**, ejecuta [`001_supabase-setup.sql`](./supabase/migrations/001_supabase-setup.sql), después [`002_provincias.sql`](./supabase/migrations/002_provincias.sql) y finalmente [`003_security-hardening.sql`](./supabase/migrations/003_security-hardening.sql).
 3. Copia tu `Project URL` y tu clave `anon public` desde **Project Settings → API**.
 
 ## 2. Frontend (local)
@@ -54,11 +54,11 @@ Esto requiere dos configuraciones externas (una en Google, una en Supabase):
 
 ## Protección obligatoria antes de desplegar
 
-Aplica `security-hardening.sql` en el servicio de Pulso (no en el portafolio), después de una copia de seguridad y antes de desplegar esta versión. No elimina votos. Bloquea lectura/escritura directa de filas y ofrece únicamente recuentos públicos y operaciones sobre el voto propio de cuentas verificadas. Google ya no es opcional para votar.
+Aplica `supabase/migrations/003_security-hardening.sql` en el servicio de Pulso (no en el portafolio), después de una copia de seguridad y antes de desplegar esta versión. No elimina votos. Bloquea lectura/escritura directa de filas y ofrece únicamente recuentos públicos y operaciones sobre el voto propio de cuentas verificadas. Google ya no es opcional para votar.
 
 Las filas antiguas sin `user_id` se conservan; no pueden reclamarse automáticamente por correo. Su vinculación requiere un proceso revisado por el propietario. No recrees las antiguas políticas públicas. Prueba con dos cuentas verificadas distintas que una no puede modificar el voto de la otra y que una solicitud sin sesión no puede votar. La aplicación no demuestra que cada cuenta sea una persona distinta. Los votos antiguos sin provincia se mantienen como legacy y no se asignan automáticamente.
 
-Para cargar el conjunto de demostración provincial, ejecuta [`sondeo-ejemplo.sql`](./sondeo-ejemplo.sql) y después [`sondeo-provincias.sql`](./sondeo-provincias.sql). Esa distribución es sintética y debe mostrarse siempre como sondeo, nunca como resultado oficial.
+Para cargar el conjunto de demostración provincial, ejecuta [`007_sondeo-ejemplo.sql`](./supabase/migrations/007_sondeo-ejemplo.sql) y después [`008_sondeo-provincias.sql`](./supabase/migrations/008_sondeo-provincias.sql). Esa distribución es sintética y debe mostrarse siempre como sondeo, nunca como resultado oficial.
 
 ## 5. Recibir un email cada vez que alguien vota
 
@@ -70,7 +70,7 @@ Para cargar el conjunto de demostración provincial, ejecuta [`sondeo-ejemplo.sq
 
 Pasos:
 
-1. Ejecuta [`supabase-email-notifications.sql`](./supabase-email-notifications.sql)
+1. Ejecuta [`006_supabase-email-notifications.sql`](./supabase/migrations/006_supabase-email-notifications.sql)
    completo en Supabase → **SQL Editor** (este archivo no contiene ninguna
    clave, es seguro tenerlo en GitHub).
 2. Crea una cuenta gratuita en [resend.com](https://resend.com) usando
@@ -97,7 +97,7 @@ select vault.update_secret(
 ```
 
 Si quieres enviar a otras direcciones, edita el valor `to` dentro de la
-función `notify_vote_email()` en `supabase-email-notifications.sql` (eso sí
+función `notify_vote_email()` en `supabase/migrations/006_supabase-email-notifications.sql` (eso sí
 es seguro subirlo, no es un secreto) y vuelve a ejecutar el archivo.
 
 ### Si ya subiste una clave de Resend a GitHub por error
@@ -140,12 +140,12 @@ genérica por defecto.
 │   ├── main.jsx          # Punto de entrada de React
 │   ├── supabaseClient.js # Cliente de Supabase
 │   └── index.css         # Tailwind
-├── supabase-setup.sql               # Script para crear las tablas en Supabase
-├── supabase-email-notifications.sql # Trigger opcional: email por cada voto
+├── supabase/migrations/001_supabase-setup.sql               # Script para crear las tablas en Supabase
+├── supabase/migrations/006_supabase-email-notifications.sql # Trigger opcional: email por cada voto
 ├── .env.example           # Plantilla de variables de entorno
 └── vite.config.js
 ```
 
 ## Seguridad y limitaciones
 
-Los cambios del repositorio no certifican el servicio desplegado: confirma que `security-hardening.sql` se aplicó y ejecuta pruebas de acceso allí. Los resultados devuelven grupos por región/candidatura, nunca nombres, correos ni filas individuales. Los grupos pequeños aún pueden revelar información por inferencia; no publiques esta encuesta como voto secreto ni como proceso electoral oficial.
+Los cambios del repositorio no certifican el servicio desplegado: confirma que `supabase/migrations/003_security-hardening.sql` se aplicó y ejecuta pruebas de acceso allí. Los resultados devuelven grupos por región/candidatura, nunca nombres, correos ni filas individuales. Los grupos pequeños aún pueden revelar información por inferencia; no publiques esta encuesta como voto secreto ni como proceso electoral oficial.
