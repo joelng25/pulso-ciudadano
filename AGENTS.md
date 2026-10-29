@@ -1,3 +1,0 @@
-- Publish only aggregate vote counts; raw votes and personal details are private.
-- Derive vote ownership from verified auth.uid(), never client-supplied email.
-- Preserve legacy votes without automatically claiming them; deploy the reviewed hardening SQL before the matching frontend.
