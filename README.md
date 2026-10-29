@@ -1,5 +1,7 @@
 # Pulso Ciudadano
 
+[![CI](https://github.com/joelng25/pulso-ciudadano/actions/workflows/ci.yml/badge.svg)](https://github.com/joelng25/pulso-ciudadano/actions/workflows/ci.yml)
+
 *Sondeo de opinión en vivo: una cuenta verificada, un voto, solo recuentos agregados.*  
 *Sondeig d'opinió en directe: un compte verificat, un vot, només recomptes agregats.*
 
